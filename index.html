@@ -274,7 +274,7 @@
       state.selectedIndex = null;
       qs('confirmBtn').disabled = true;
       resultEl.textContent = '';
-      currentSongEl.textContent = `${state.currentSong.artist} – ${state.currentSong.title} (Jahr verborgen)`;
+      currentSongEl.textContent = `🎵 Song läuft … (Titel & Jahr verborgen)`;
       spotifyPlayer.src = `https://open.spotify.com/embed/track/${state.currentSong.trackId}?utm_source=generator`;
     }
 
