@@ -169,7 +169,6 @@
         <div id="placement" class="timeline"></div>
 
         <div class="row" style="margin-top:10px;">
-          <button id="drawBtn">Song ziehen</button>
           <button id="confirmBtn" disabled>Platzierung bestätigen</button>
           <span id="result" class="mono"></span>
         </div>
@@ -335,11 +334,12 @@
       });
     }
 
-    function renderTurn() {
+    async function renderTurn() {
       const p = state.players[state.turn];
       turnInfoEl.textContent = `Am Zug: ${p.name}`;
       renderPlayers();
       renderPlacementSlots();
+      await drawSong();
     }
 
     function renderPlacementSlots() {
@@ -413,14 +413,14 @@
       return true;
     }
 
-    function nextTurn() {
+    async function nextTurn() {
       state.turn = (state.turn + 1) % state.players.length;
       state.currentSong = null;
       state.selectedIndex = null;
       qs('confirmBtn').disabled = true;
       currentSongEl.textContent = 'Noch kein Song gezogen.';
       resetPlayerUi();
-      renderTurn();
+      await renderTurn();
     }
 
     function confirmPlacement() {
@@ -438,7 +438,6 @@
       if (p.timeline.length >= state.target) {
         renderPlayers();
         turnInfoEl.textContent = `🏆 ${p.name} gewinnt!`;
-        qs('drawBtn').disabled = true;
         qs('confirmBtn').disabled = true;
         return;
       }
@@ -446,7 +445,7 @@
       setTimeout(nextTurn, 1200);
     }
 
-    function startGame() {
+    async function startGame() {
       const n = Number(qs('playerCount').value);
       const names = Array.from({ length: n }, (_, i) => (qs(`p-${i}`).value || `Spieler ${i+1}`).trim());
 
@@ -464,9 +463,8 @@
 
       setupCard.style.display = 'none';
       gameEl.style.display = 'grid';
-      qs('drawBtn').disabled = false;
       qs('confirmBtn').disabled = true;
-      renderTurn();
+      await renderTurn();
     }
 
     function hardReset() {
@@ -509,7 +507,6 @@
 
     qs('playerCount').addEventListener('change', rebuildNameInputs);
     qs('startBtn').addEventListener('click', startGame);
-    qs('drawBtn').addEventListener('click', drawSong);
     qs('confirmBtn').addEventListener('click', confirmPlacement);
     qs('resetBtn').addEventListener('click', hardReset);
 
