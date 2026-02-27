@@ -100,7 +100,16 @@
     .playerBox { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
     .playerBox.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
 
-    iframe { width: 100%; height: 152px; border: 0; border-radius: 10px; }
+    .playerWrap { position: relative; border-radius: 10px; overflow: hidden; }
+    iframe { width: 100%; height: 152px; border: 0; border-radius: 10px; display:block; }
+    .spotifyMask {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: #0b1220;
+      border-bottom: 1px solid var(--border);
+      pointer-events: none;
+    }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   </style>
 </head>
@@ -133,7 +142,10 @@
         <h2>Aktueller Zug</h2>
         <div id="turnInfo" class="pill"></div>
         <div id="currentSong" class="small" style="margin:10px 0;">Noch kein Song gezogen.</div>
-        <iframe id="spotifyPlayer" title="Spotify Player" src=""></iframe>
+        <div class="playerWrap">
+          <iframe id="spotifyPlayer" title="Spotify Player" src=""></iframe>
+          <div class="spotifyMask" aria-hidden="true"></div>
+        </div>
 
         <h3 style="margin-top:12px;">Platzierung wählen</h3>
         <p class="small">Klicke auf eine Position zwischen den Karten des aktiven Spielers.</p>
