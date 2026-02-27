@@ -6,22 +6,14 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
 
 - Keine Karten nötig
 - Eingabe von Spieleranzahl + Namen
-- Songtitel bleibt verborgen bis zur Auflösung
-- Play-Button für Spotify-Playback (Embed)
+- Zufälliger Song-Draw aus internem Pool
 - Einordnen in den eigenen Zeitstrahl
-- Multiplayer-Session-Code (Host/Join) via PeerJS, spielbar auf mehreren Smartphones
+- Spotify-Playback via Embed pro Song
 - Gewinner bei 10 korrekt eingeordneten Songs
 
 ## Start
 
 Einfach `index.html` im Browser öffnen (oder via GitHub Pages hosten).
-
-### Multiplayer (Session-Code)
-
-1. Ein Gerät klickt **„Multiplayer Session erstellen“** (Host).
-2. Der angezeigte Session-Code wird an Mitspieler geteilt.
-3. Andere Geräte geben Namen + Code ein und klicken **„Session beitreten“**.
-4. Der aktive Spielerzug wird auf allen Geräten synchron dargestellt.
 
 ## Regeln (kurz)
 
