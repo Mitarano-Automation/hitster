@@ -100,15 +100,28 @@
     .playerBox { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
     .playerBox.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
 
-    .playerWrap { position: relative; border-radius: 10px; overflow: hidden; }
-    iframe { width: 100%; height: 152px; border: 0; border-radius: 10px; display:block; }
-    .spotifyMask {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 52px;
+    .miniPlayer {
       background: #0b1220;
-      border-bottom: 1px solid var(--border);
-      pointer-events: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .progress {
+      width: 100%;
+      height: 8px;
+      appearance: none;
+      background: #1f2937;
+      border-radius: 999px;
+      outline: none;
+    }
+    .progress::-webkit-slider-thumb {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #60a5fa;
+      cursor: pointer;
+      border: 0;
     }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   </style>
@@ -142,9 +155,13 @@
         <h2>Aktueller Zug</h2>
         <div id="turnInfo" class="pill"></div>
         <div id="currentSong" class="small" style="margin:10px 0;">Noch kein Song gezogen.</div>
-        <div class="playerWrap">
-          <iframe id="spotifyPlayer" title="Spotify Player" src=""></iframe>
-          <div class="spotifyMask" aria-hidden="true"></div>
+        <div class="miniPlayer">
+          <div class="row" style="margin-bottom:8px;">
+            <button id="playPauseBtn" class="secondary" disabled>▶️ Play</button>
+            <span id="playerStatus" class="small">Kein Preview geladen.</span>
+          </div>
+          <input id="seekBar" class="progress" type="range" min="0" max="100" value="0" disabled />
+          <audio id="audioPlayer" preload="none"></audio>
         </div>
 
         <h3 style="margin-top:12px;">Platzierung wählen</h3>
@@ -208,7 +225,10 @@
     const resultEl = qs('result');
     const turnInfoEl = qs('turnInfo');
     const currentSongEl = qs('currentSong');
-    const spotifyPlayer = qs('spotifyPlayer');
+    const audioPlayer = qs('audioPlayer');
+    const playPauseBtn = qs('playPauseBtn');
+    const seekBar = qs('seekBar');
+    const playerStatus = qs('playerStatus');
 
     function shuffle(arr) {
       const a = [...arr];
@@ -277,7 +297,30 @@
       }
     }
 
-    function drawSong() {
+    async function loadPreview(song) {
+      // neutral preview source (no title shown in UI): iTunes Search API
+      const term = encodeURIComponent(`${song.artist} ${song.title}`);
+      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=1`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Preview-Suche fehlgeschlagen');
+      const data = await res.json();
+      const preview = data?.results?.[0]?.previewUrl;
+      if (!preview) throw new Error('Kein Preview gefunden');
+      return preview;
+    }
+
+    function resetPlayerUi(msg = 'Kein Preview geladen.') {
+      audioPlayer.pause();
+      audioPlayer.removeAttribute('src');
+      audioPlayer.load();
+      playPauseBtn.disabled = true;
+      playPauseBtn.textContent = '▶️ Play';
+      seekBar.value = 0;
+      seekBar.disabled = true;
+      playerStatus.textContent = msg;
+    }
+
+    async function drawSong() {
       if (!state.deck.length) {
         resultEl.textContent = 'Deck ist leer.';
         return;
@@ -287,7 +330,17 @@
       qs('confirmBtn').disabled = true;
       resultEl.textContent = '';
       currentSongEl.textContent = `🎵 Song läuft … (Titel & Jahr verborgen)`;
-      spotifyPlayer.src = `https://open.spotify.com/embed/track/${state.currentSong.trackId}?utm_source=generator`;
+
+      resetPlayerUi('Lade Song-Preview …');
+      try {
+        const previewUrl = await loadPreview(state.currentSong);
+        audioPlayer.src = previewUrl;
+        playPauseBtn.disabled = false;
+        seekBar.disabled = false;
+        playerStatus.textContent = 'Preview bereit.';
+      } catch (e) {
+        resetPlayerUi('Kein Preview verfügbar. Zieh ggf. den nächsten Song.');
+      }
     }
 
     function isPlacementCorrect(timeline, song, index) {
@@ -304,7 +357,7 @@
       state.selectedIndex = null;
       qs('confirmBtn').disabled = true;
       currentSongEl.textContent = 'Noch kein Song gezogen.';
-      spotifyPlayer.src = '';
+      resetPlayerUi();
       renderTurn();
     }
 
@@ -363,9 +416,34 @@
       setupCard.style.display = 'block';
       gameEl.style.display = 'none';
       resultEl.textContent = '';
-      spotifyPlayer.src = '';
+      resetPlayerUi();
       rebuildNameInputs();
     }
+
+    playPauseBtn.addEventListener('click', async () => {
+      if (!audioPlayer.src) return;
+      if (audioPlayer.paused) {
+        await audioPlayer.play();
+        playPauseBtn.textContent = '⏸ Pause';
+      } else {
+        audioPlayer.pause();
+        playPauseBtn.textContent = '▶️ Play';
+      }
+    });
+
+    audioPlayer.addEventListener('timeupdate', () => {
+      if (!audioPlayer.duration) return;
+      seekBar.value = Math.round((audioPlayer.currentTime / audioPlayer.duration) * 100);
+    });
+
+    audioPlayer.addEventListener('ended', () => {
+      playPauseBtn.textContent = '▶️ Play';
+    });
+
+    seekBar.addEventListener('input', () => {
+      if (!audioPlayer.duration) return;
+      audioPlayer.currentTime = (Number(seekBar.value) / 100) * audioPlayer.duration;
+    });
 
     qs('playerCount').addEventListener('change', rebuildNameInputs);
     qs('startBtn').addEventListener('click', startGame);
@@ -373,6 +451,7 @@
     qs('confirmBtn').addEventListener('click', confirmPlacement);
     qs('resetBtn').addEventListener('click', hardReset);
 
+    resetPlayerUi();
     rebuildNameInputs();
   </script>
 </body>
