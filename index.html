@@ -184,7 +184,7 @@
 
   <script>
     // Curated demo set (replace/extend freely)
-    const SONGS = [
+    const SONGS_BASE = [
       ["A-ha","Take On Me",1985,"2WfaOiMkCvy7F5fcp2zZ8L"],
       ["ABBA","Dancing Queen",1976,"0GjEhVFGZW8afUYGChu3Rr"],
       ["AC/DC","Back In Black",1980,"08mG3Y1vljYA6bvDt4Wqkj"],
@@ -264,6 +264,10 @@
       ["Wiz Khalifa","See You Again",2015,"2JzZzZUQj3Qff7wapcbKjc"],
       ["ZAYN","PILLOWTALK",2016,"0PDUDa38GO8lMxLCRc4lL1"]
     ].map(([artist,title,year,trackId]) => ({ artist, title, year, trackId }));
+
+    const SONGS = Array.from({ length: 200 }, (_, i) => ({
+      ...SONGS_BASE[i % SONGS_BASE.length]
+    }));
 
     const state = {
       players: [], // {name, timeline:[song]}
