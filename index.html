@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hitster (Fan Demo) – Timeline Musikspiel</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --soft: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      padding: 18px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    h1, h2, h3 { margin: 0 0 10px; }
+    p { margin: 0 0 10px; color: var(--muted); }
+    input, button, select {
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 9px 11px;
+      font: inherit;
+    }
+    input, select { background: #0b1220; color: var(--text); }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.secondary { background: #475569; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .pill {
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: .82rem;
+      border: 1px solid var(--border);
+      background: var(--soft);
+      display: inline-block;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    .ok { color: var(--accent); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+
+    .timeline {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .slot {
+      min-width: 64px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+    }
+    .slot:hover { border-color: #64748b; color: var(--text); }
+    .song {
+      min-width: 190px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .song b { display: block; }
+    .small { font-size: .86rem; color: var(--muted); }
+
+    .players { display: grid; gap: 10px; }
+    .playerBox { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
+    .playerBox.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
+
+    iframe { width: 100%; height: 152px; border: 0; border-radius: 10px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>🎵 Hitster – Fan Remake (ohne Karten)</h1>
+      <p>Spielidee: Songs korrekt in den eigenen Zeitstrahl einordnen. Gewinner ist, wer zuerst 10 Karten korrekt hat.</p>
+      <p class="small">Hinweis: Inoffizielles Fan-Projekt. Nutzt Spotify-Embeds für Wiedergabe.</p>
+    </section>
+
+    <section class="card" id="setup-card">
+      <h2>Setup</h2>
+      <div class="row" style="margin-bottom:8px;">
+        <label>Spieleranzahl
+          <select id="playerCount">
+            <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+          </select>
+        </label>
+      </div>
+      <div id="nameInputs" class="row"></div>
+      <div class="row" style="margin-top:8px;">
+        <button id="startBtn">Spiel starten</button>
+        <button id="resetBtn" class="secondary">Neu starten</button>
+      </div>
+    </section>
+
+    <section class="grid" id="game" style="display:none;">
+      <div class="card">
+        <h2>Aktueller Zug</h2>
+        <div id="turnInfo" class="pill"></div>
+        <div id="currentSong" class="small" style="margin:10px 0;">Noch kein Song gezogen.</div>
+        <iframe id="spotifyPlayer" title="Spotify Player" src=""></iframe>
+
+        <h3 style="margin-top:12px;">Platzierung wählen</h3>
+        <p class="small">Klicke auf eine Position zwischen den Karten des aktiven Spielers.</p>
+        <div id="placement" class="timeline"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button id="drawBtn">Song ziehen</button>
+          <button id="confirmBtn" disabled>Platzierung bestätigen</button>
+          <span id="result" class="mono"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Spieler & Zeitstrahl</h2>
+        <div id="players" class="players"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Curated demo set (replace/extend freely)
+    const SONGS = [
+      ["A-ha","Take On Me",1985,"2WfaOiMkCvy7F5fcp2zZ8L"],
+      ["Nirvana","Smells Like Teen Spirit",1991,"5ghIJDpPoe3CfHMGu71E6T"],
+      ["Daft Punk","One More Time",2000,"0DiWol3AO6WpXZgp0goxAV"],
+      ["ABBA","Dancing Queen",1976,"0GjEhVFGZW8afUYGChu3Rr"],
+      ["Queen","Bohemian Rhapsody",1975,"4u7EnebtmKWzUH433cf5Qv"],
+      ["Eminem","Lose Yourself",2002,"5Z01UMMf7V1o0MzF86s6WJ"],
+      ["Michael Jackson","Billie Jean",1982,"5ChkMS8OtdzJeqyybCc9R5"],
+      ["Linkin Park","Numb",2003,"2nLtzopw4rPReszdYBJU6h"],
+      ["The Weeknd","Blinding Lights",2019,"0VjIjW4GlUZAMYd2vXMi3b"],
+      ["Oasis","Wonderwall",1995,"5qqabIl2vWzo9ApSC317sa"],
+      ["Britney Spears","...Baby One More Time",1998,"3MjUtNVVq3C8Fn0MP3zhXa"],
+      ["Rick Astley","Never Gonna Give You Up",1987,"4cOdK2wGLETKBW3PvgPWqT"],
+      ["Dua Lipa","Levitating",2020,"39LLxExYz6ewLAcYrzQQyP"],
+      ["Coldplay","Viva La Vida",2008,"1mea3bSkSGXuIRvnydlB5b"],
+      ["Ed Sheeran","Shape of You",2017,"7qiZfU4dY1lWllzX7mPBI3"],
+      ["Lady Gaga","Poker Face",2008,"1QV6tiMFM6fSOKOGLMHYYg"],
+      ["The Killers","Mr. Brightside",2003,"003vvx7Niy0yvhvHt4a68B"],
+      ["Backstreet Boys","I Want It That Way",1999,"47BBI51FKFwOMlIiX6m8ya"],
+      ["Imagine Dragons","Believer",2017,"0pqnGHJpmpxLKifKRmU6WP"],
+      ["Toto","Africa",1982,"2374M0fQpWi3dLnB54qaLX"]
+    ].map(([artist,title,year,trackId]) => ({ artist, title, year, trackId }));
+
+    const state = {
+      players: [], // {name, timeline:[song]}
+      deck: [],
+      turn: 0,
+      currentSong: null,
+      selectedIndex: null,
+      target: 10
+    };
+
+    const qs = (id) => document.getElementById(id);
+    const setupCard = qs('setup-card');
+    const gameEl = qs('game');
+    const namesEl = qs('nameInputs');
+    const playersEl = qs('players');
+    const placementEl = qs('placement');
+    const resultEl = qs('result');
+    const turnInfoEl = qs('turnInfo');
+    const currentSongEl = qs('currentSong');
+    const spotifyPlayer = qs('spotifyPlayer');
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function rebuildNameInputs() {
+      const n = Number(qs('playerCount').value);
+      namesEl.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        const input = document.createElement('input');
+        input.placeholder = `Spieler ${i + 1}`;
+        input.value = `Spieler ${i + 1}`;
+        input.id = `p-${i}`;
+        namesEl.appendChild(input);
+      }
+    }
+
+    function renderPlayers() {
+      playersEl.innerHTML = '';
+      state.players.forEach((p, idx) => {
+        const box = document.createElement('div');
+        box.className = 'playerBox' + (idx === state.turn ? ' active' : '');
+        const title = document.createElement('div');
+        title.innerHTML = `<b>${p.name}</b> <span class="small">(${p.timeline.length}/${state.target})</span>`;
+        box.appendChild(title);
+
+        const tl = document.createElement('div');
+        tl.className = 'timeline';
+        p.timeline.forEach(s => {
+          const node = document.createElement('div');
+          node.className = 'song';
+          node.innerHTML = `<b>${s.year}</b><div class="small">${s.artist} – ${s.title}</div>`;
+          tl.appendChild(node);
+        });
+        box.appendChild(tl);
+        playersEl.appendChild(box);
+      });
+    }
+
+    function renderTurn() {
+      const p = state.players[state.turn];
+      turnInfoEl.textContent = `Am Zug: ${p.name}`;
+      renderPlayers();
+      renderPlacementSlots();
+    }
+
+    function renderPlacementSlots() {
+      const p = state.players[state.turn];
+      placementEl.innerHTML = '';
+      const slots = p.timeline.length + 1;
+      for (let i = 0; i < slots; i++) {
+        const slot = document.createElement('button');
+        slot.className = 'slot';
+        slot.textContent = `Position ${i + 1}`;
+        slot.onclick = () => {
+          state.selectedIndex = i;
+          [...placementEl.children].forEach((x, idx) => x.style.outline = idx === i ? '2px solid #60a5fa' : 'none');
+          qs('confirmBtn').disabled = false;
+        };
+        placementEl.appendChild(slot);
+      }
+    }
+
+    function drawSong() {
+      if (!state.deck.length) {
+        resultEl.textContent = 'Deck ist leer.';
+        return;
+      }
+      state.currentSong = state.deck.pop();
+      state.selectedIndex = null;
+      qs('confirmBtn').disabled = true;
+      resultEl.textContent = '';
+      currentSongEl.textContent = `${state.currentSong.artist} – ${state.currentSong.title} (Jahr verborgen)`;
+      spotifyPlayer.src = `https://open.spotify.com/embed/track/${state.currentSong.trackId}?utm_source=generator`;
+    }
+
+    function isPlacementCorrect(timeline, song, index) {
+      const left = timeline[index - 1] || null;
+      const right = timeline[index] || null;
+      if (left && song.year < left.year) return false;
+      if (right && song.year > right.year) return false;
+      return true;
+    }
+
+    function nextTurn() {
+      state.turn = (state.turn + 1) % state.players.length;
+      state.currentSong = null;
+      state.selectedIndex = null;
+      qs('confirmBtn').disabled = true;
+      currentSongEl.textContent = 'Noch kein Song gezogen.';
+      spotifyPlayer.src = '';
+      renderTurn();
+    }
+
+    function confirmPlacement() {
+      const p = state.players[state.turn];
+      if (!state.currentSong || state.selectedIndex === null) return;
+
+      const ok = isPlacementCorrect(p.timeline, state.currentSong, state.selectedIndex);
+      if (ok) {
+        p.timeline.splice(state.selectedIndex, 0, state.currentSong);
+        resultEl.innerHTML = `<span class='ok'>✔ Richtig! ${state.currentSong.year}</span>`;
+      } else {
+        resultEl.innerHTML = `<span class='bad'>✖ Falsch. Song war von ${state.currentSong.year}.</span>`;
+      }
+
+      if (p.timeline.length >= state.target) {
+        renderPlayers();
+        turnInfoEl.textContent = `🏆 ${p.name} gewinnt!`;
+        qs('drawBtn').disabled = true;
+        qs('confirmBtn').disabled = true;
+        return;
+      }
+
+      setTimeout(nextTurn, 1200);
+    }
+
+    function startGame() {
+      const n = Number(qs('playerCount').value);
+      const names = Array.from({ length: n }, (_, i) => (qs(`p-${i}`).value || `Spieler ${i+1}`).trim());
+
+      const deck = shuffle(SONGS);
+      if (deck.length < n + 1) {
+        alert('Zu wenig Songs im Deck.');
+        return;
+      }
+
+      state.players = names.map(name => ({ name, timeline: [deck.pop()] }));
+      state.deck = deck;
+      state.turn = 0;
+      state.currentSong = null;
+      state.selectedIndex = null;
+
+      setupCard.style.display = 'none';
+      gameEl.style.display = 'grid';
+      qs('drawBtn').disabled = false;
+      qs('confirmBtn').disabled = true;
+      renderTurn();
+    }
+
+    function hardReset() {
+      state.players = [];
+      state.deck = [];
+      state.turn = 0;
+      state.currentSong = null;
+      state.selectedIndex = null;
+      setupCard.style.display = 'block';
+      gameEl.style.display = 'none';
+      resultEl.textContent = '';
+      spotifyPlayer.src = '';
+      rebuildNameInputs();
+    }
+
+    qs('playerCount').addEventListener('change', rebuildNameInputs);
+    qs('startBtn').addEventListener('click', startGame);
+    qs('drawBtn').addEventListener('click', drawSong);
+    qs('confirmBtn').addEventListener('click', confirmPlacement);
+    qs('resetBtn').addEventListener('click', hardReset);
+
+    rebuildNameInputs();
+  </script>
+</body>
+</html>
