@@ -6,9 +6,10 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
 
 - Keine Karten nötig
 - Eingabe von Spieleranzahl + Namen
-- Zufälliger Song-Draw aus internem Pool
-- Einordnen in den eigenen Zeitstrahl
-- Spotify-Playback via Embed pro Song
+- Songtitel bleibt bis zur Auflösung verborgen
+- Spotify-Preview mit Play/Pause
+- Shazam-Button zur schnellen Songerkennung
+- Multiplayer-Session-Code (Host/Join) für mehrere Smartphones
 - Gewinner bei 10 korrekt eingeordneten Songs
 
 ## Start

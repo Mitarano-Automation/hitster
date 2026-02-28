@@ -158,6 +158,7 @@
         <div class="miniPlayer">
           <div class="row" style="margin-bottom:8px;">
             <button id="playPauseBtn" class="secondary" disabled>▶️ Play</button>
+            <button id="shazamBtn" class="secondary">🎙️ Shazam</button>
             <span id="playerStatus" class="small">Kein Preview geladen.</span>
           </div>
           <input id="seekBar" class="progress" type="range" min="0" max="100" value="0" disabled />
@@ -288,6 +289,7 @@
     const currentSongEl = qs('currentSong');
     const audioPlayer = qs('audioPlayer');
     const playPauseBtn = qs('playPauseBtn');
+    const shazamBtn = qs('shazamBtn');
     const seekBar = qs('seekBar');
     const playerStatus = qs('playerStatus');
 
@@ -503,6 +505,10 @@
     seekBar.addEventListener('input', () => {
       if (!audioPlayer.duration) return;
       audioPlayer.currentTime = (Number(seekBar.value) / 100) * audioPlayer.duration;
+    });
+
+    shazamBtn.addEventListener('click', () => {
+      window.open('https://www.shazam.com/de/home', '_blank', 'noopener');
     });
 
     qs('playerCount').addEventListener('change', rebuildNameInputs);
