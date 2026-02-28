@@ -15,19 +15,6 @@
       --warn: #f59e0b;
       --bad: #ef4444;
       --border: #334155;
-      --surface: #0b1220;
-    }
-    body.light {
-      --bg: #f8fafc;
-      --panel: #ffffff;
-      --soft: #e2e8f0;
-      --text: #0f172a;
-      --muted: #475569;
-      --accent: #059669;
-      --warn: #b45309;
-      --bad: #dc2626;
-      --border: #cbd5e1;
-      --surface: #f1f5f9;
     }
     * { box-sizing: border-box; }
     body {
@@ -53,7 +40,7 @@
       padding: 9px 11px;
       font: inherit;
     }
-    input, select { background: var(--surface); color: var(--text); }
+    input, select { background: #0b1220; color: var(--text); }
     button {
       background: #2563eb;
       color: #fff;
@@ -101,7 +88,7 @@
     .slot:hover { border-color: #64748b; color: var(--text); }
     .song {
       min-width: 190px;
-      background: var(--surface);
+      background: #0b1220;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 8px;
@@ -110,11 +97,11 @@
     .small { font-size: .86rem; color: var(--muted); }
 
     .players { display: grid; gap: 10px; }
-    .playerBox { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--surface); }
+    .playerBox { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
     .playerBox.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
 
     .miniPlayer {
-      background: var(--surface);
+      background: #0b1220;
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px;
@@ -142,12 +129,9 @@
 <body>
   <main class="wrap">
     <section class="card">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-        <h1 style="margin:0;">🎵 Hitster – Fan Remake (ohne Karten)</h1>
-        <button id="themeBtn" class="secondary">☀️ Light Mode</button>
-      </div>
+      <h1>🎵 Hitster – Fan Remake (ohne Karten)</h1>
       <p>Spielidee: Songs korrekt in den eigenen Zeitstrahl einordnen. Gewinner ist, wer zuerst 10 Karten korrekt hat.</p>
-      <p class="small">Hinweis: Inoffizielles Fan-Projekt mit neutralem Preview-Player.</p>
+      <p class="small">Hinweis: Inoffizielles Fan-Projekt. Nutzt Spotify-Embeds für Wiedergabe.</p>
     </section>
 
     <section class="card" id="setup-card">
@@ -308,14 +292,6 @@
     const shazamBtn = qs('shazamBtn');
     const seekBar = qs('seekBar');
     const playerStatus = qs('playerStatus');
-    const themeBtn = qs('themeBtn');
-
-    function applyTheme(mode) {
-      const light = mode === 'light';
-      document.body.classList.toggle('light', light);
-      themeBtn.textContent = light ? '🌙 Dark Mode' : '☀️ Light Mode';
-      localStorage.setItem('hitster-theme', light ? 'light' : 'dark');
-    }
 
     function shuffle(arr) {
       const a = [...arr];
@@ -535,16 +511,11 @@
       window.open('https://www.shazam.com/de/home', '_blank', 'noopener');
     });
 
-    themeBtn.addEventListener('click', () => {
-      applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
-    });
-
     qs('playerCount').addEventListener('change', rebuildNameInputs);
     qs('startBtn').addEventListener('click', startGame);
     qs('confirmBtn').addEventListener('click', confirmPlacement);
     qs('resetBtn').addEventListener('click', hardReset);
 
-    applyTheme(localStorage.getItem('hitster-theme') || 'dark');
     resetPlayerUi();
     rebuildNameInputs();
   </script>
