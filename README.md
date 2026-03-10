@@ -7,6 +7,10 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
 - Lokales Multiplayer-Spiel für 2–6 Spieler
 - Songtitel und Jahr bleiben bis zur Bestätigung verborgen
 - Audio-Preview (Play/Pause + Seek)
+- Fokus-Layout für den Zug:
+  - links immer der **volle, detaillierte Zeitstrahl des aktiven Spielers**
+  - rechts eine **kompakte Spielerübersicht** (Name + Kartenanzahl)
+  - aktive Person ist in beiden Bereichen klar markiert
 - Verbesserte Platzierungs-UI:
   - Einfügepunkte klar zwischen den Timeline-Karten
   - ausgewählter Einfügepunkt ist ein **einheitliches Control** inkl. "Aktueller Song"-Status
