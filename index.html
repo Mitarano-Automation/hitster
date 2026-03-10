@@ -69,18 +69,53 @@
     .warn { color: var(--warn); }
 
     .timeline {
-      display: flex;
-      flex-wrap: nowrap;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(155px, 170px);
       gap: 8px;
       overflow-x: auto;
-      padding-bottom: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #0a1220 0%, #0b1220 100%);
+      scrollbar-width: thin;
+      scroll-snap-type: x proximity;
+    }
+    .timeline.dense {
+      grid-auto-columns: minmax(138px, 150px);
     }
     .song {
-      min-width: 190px;
-      background: #0b1220;
-      border: 1px solid var(--border);
+      min-width: 0;
+      background: #0f1a2d;
+      border: 1px solid #334155;
       border-radius: 8px;
       padding: 8px;
+      scroll-snap-align: start;
+    }
+    .song b {
+      display: inline-block;
+      font-size: .95rem;
+      margin-bottom: 4px;
+    }
+    .song .songMeta {
+      display: grid;
+      gap: 2px;
+      line-height: 1.22;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .song .songMeta .songTitle {
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+    @media (max-width: 900px) {
+      .timeline {
+        grid-auto-columns: minmax(170px, 74vw);
+      }
+      .timeline.dense {
+        grid-auto-columns: minmax(155px, 68vw);
+      }
     }
      .placementBoard {
       display: grid;
@@ -142,7 +177,6 @@
       .placementSong { padding: 12px; }
       .insertBtn { padding: 12px; }
     }
-    .song b { display: block; }
     .small { font-size: .86rem; color: var(--muted); }
 
     .players { display: grid; gap: 10px; }
@@ -371,11 +405,17 @@
         box.appendChild(title);
 
         const tl = document.createElement('div');
-        tl.className = 'timeline';
+        tl.className = 'timeline' + (p.timeline.length > 8 ? ' dense' : '');
         p.timeline.forEach(s => {
           const node = document.createElement('div');
           node.className = 'song';
-          node.innerHTML = `<b>${s.year}</b><div class="small">${s.artist} – ${s.title}</div>`;
+          node.innerHTML = `
+            <b>${s.year}</b>
+            <div class="songMeta">
+              <span class="songTitle">${s.title}</span>
+              <span>${s.artist}</span>
+            </div>
+          `;
           tl.appendChild(node);
         });
         box.appendChild(tl);
