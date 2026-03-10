@@ -182,25 +182,6 @@
     }
     .small { font-size: .86rem; color: var(--muted); }
 
-    .activeTimelineCard {
-      border: 1px solid #2f3f58;
-      border-radius: 12px;
-      padding: 10px;
-      margin: 10px 0 12px;
-      background: rgba(11, 18, 32, 0.55);
-    }
-    .activeTimelineHead {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .activeTimelineHead .playerName {
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
     .playersPanel {
       min-width: 0;
     }
@@ -288,7 +269,7 @@
 <body>
   <main class="wrap">
     <section class="card">
-      <h1>🎵 Hitster – Fan Remake (ohne Karten)</h1>
+      <h1>Hitster – Fan Remake</h1>
       <p>Spielidee: Songs korrekt in den eigenen Zeitstrahl einordnen. Gewinner ist, wer zuerst 10 Karten korrekt hat.</p>
       <p class="small">Hinweis: Inoffizielles Fan-Projekt mit externen Song-Previews.</p>
     </section>
@@ -321,15 +302,6 @@
           </div>
           <input id="seekBar" class="progress" type="range" min="0" max="100" value="0" disabled />
           <audio id="audioPlayer" preload="none"></audio>
-        </div>
-
-        <h3 style="margin-top:12px;">Aktiver Zeitstrahl</h3>
-        <div class="activeTimelineCard">
-          <div class="activeTimelineHead">
-            <span id="activePlayerName" class="playerName">-</span>
-            <span id="activePlayerCount" class="playerCount">0/10</span>
-          </div>
-          <div id="activeTimeline" class="timeline"></div>
         </div>
 
         <h3 style="margin-top:12px;">Platzierung wählen</h3>
@@ -455,9 +427,6 @@
     const resultEl = qs('result');
     const turnInfoEl = qs('turnInfo');
     const currentSongEl = qs('currentSong');
-    const activeTimelineEl = qs('activeTimeline');
-    const activePlayerNameEl = qs('activePlayerName');
-    const activePlayerCountEl = qs('activePlayerCount');
     const audioPlayer = qs('audioPlayer');
     const playPauseBtn = qs('playPauseBtn');
     const seekBar = qs('seekBar');
@@ -501,14 +470,6 @@
       });
     }
 
-    function renderActiveTimeline() {
-      const p = state.players[state.turn];
-      if (!p) return;
-      activePlayerNameEl.textContent = p.name;
-      activePlayerCountEl.textContent = `${p.timeline.length}/${state.target}`;
-      renderTimelineInto(activeTimelineEl, p.timeline);
-    }
-
     function renderPlayers() {
       playersEl.innerHTML = '';
       state.players.forEach((p, idx) => {
@@ -544,7 +505,6 @@
       const p = state.players[state.turn];
       turnInfoEl.textContent = `Am Zug: ${p.name}`;
       renderPlayers();
-      renderActiveTimeline();
       renderPlacementSlots();
       await drawSong();
     }
@@ -670,7 +630,7 @@
 
       resetPlayerUi('Lade Song-Preview …');
 
-      const { chosenSong, previewUrl, skippedNoPreview } = await drawCandidateWithPreview(
+      const { chosenSong, previewUrl } = await drawCandidateWithPreview(
         state.deck,
         loadPreview,
         3,
@@ -685,16 +645,14 @@
       }
 
       state.currentSong = chosenSong;
-      currentSongEl.textContent = `🎵 Song läuft … (Titel & Jahr verborgen)`;
+      currentSongEl.textContent = '';
       renderPlacementSlots();
 
       if (previewUrl) {
         audioPlayer.src = previewUrl;
         playPauseBtn.disabled = false;
         seekBar.disabled = false;
-        playerStatus.textContent = skippedNoPreview > 0
-          ? `Preview bereit. ${skippedNoPreview} Song(s) ohne Preview wurden automatisch übersprungen.`
-          : 'Preview bereit.';
+        playerStatus.textContent = 'Preview bereit.';
       } else {
         resetPlayerUi('Kein Preview gefunden. Dieser Zug wird ohne Audio gespielt.');
       }
@@ -731,7 +689,6 @@
       }
 
       renderPlayers();
-      renderActiveTimeline();
 
       if (p.timeline.length >= state.target) {
         turnInfoEl.textContent = `🏆 ${p.name} gewinnt!`;
@@ -773,9 +730,6 @@
       setupCard.style.display = 'block';
       gameEl.style.display = 'none';
       resultEl.textContent = '';
-      activeTimelineEl.innerHTML = '';
-      activePlayerNameEl.textContent = '-';
-      activePlayerCountEl.textContent = `0/${state.target}`;
       resetPlayerUi();
       rebuildNameInputs();
     }
