@@ -409,6 +409,21 @@
       ...SONGS_BASE[i % SONGS_BASE.length]
     }));
 
+    function buildGameDeck() {
+      // Garantiert eindeutige Songs pro Spielrunde (keine Wiederholungen innerhalb eines laufenden Spiels).
+      const seen = new Set();
+      const uniqueSongs = [];
+
+      SONGS.forEach((song) => {
+        const key = song.trackId || `${song.artist}::${song.title}::${song.year}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        uniqueSongs.push(song);
+      });
+
+      return shuffle(uniqueSongs);
+    }
+
     const state = {
       players: [], // {name, timeline:[song]}
       deck: [],
@@ -703,7 +718,7 @@
       const n = Number(qs('playerCount').value);
       const names = Array.from({ length: n }, (_, i) => (qs(`p-${i}`).value || `Spieler ${i+1}`).trim());
 
-      const deck = shuffle(SONGS);
+      const deck = buildGameDeck();
       if (deck.length < n + 1) {
         alert('Zu wenig Songs im Deck.');
         return;

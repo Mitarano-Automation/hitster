@@ -19,6 +19,7 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
   - bei fehlendem Preview wird automatisch bis zu 3x der nächste Song versucht
   - falls weiterhin kein Preview gefunden wird, läuft der Zug deterministisch ohne Audio weiter (kein Deadlock)
 - Gewinner bei 10 korrekt eingeordneten Songs
+- Keine Song-Wiederholungen innerhalb eines laufenden Spiels (pro gestarteter Runde eindeutig)
 
 ## Start
 
