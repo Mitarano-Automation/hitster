@@ -103,8 +103,27 @@
       color: #bfdbfe;
       background: rgba(59, 130, 246, 0.18);
       box-shadow: 0 0 0 1px #60a5fa inset;
+      text-align: left;
     }
     .insertBtn:hover { color: var(--text); border-color: #94a3b8; }
+    .insertBtn .slotHint {
+      display: block;
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .insertBtn .slotGhost {
+      margin-top: 8px;
+      border: 1px solid #60a5fa;
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .insertBtn .slotGhost .title {
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: #dbeafe;
+    }
     .placementSong {
       border: 1px solid var(--border);
       background: #0b1220;
@@ -378,9 +397,21 @@
       const slots = p.timeline.length + 1;
 
       const createInsertButton = (i) => {
+        const isSelected = state.selectedIndex === i;
         const btn = document.createElement('button');
-        btn.className = 'insertBtn' + (state.selectedIndex === i ? ' active' : '');
-        btn.textContent = `⬇ Hier einfügen (Position ${i + 1})`;
+        btn.className = 'insertBtn' + (isSelected ? ' active' : '');
+        btn.innerHTML = `
+          <div>⬇ Hier einfügen (Position ${i + 1})</div>
+          <span class="slotHint">${isSelected ? 'Ausgewählt' : 'Tippen zum Auswählen'}</span>
+        `;
+
+        if (isSelected && state.currentSong) {
+          const ghost = document.createElement('div');
+          ghost.className = 'slotGhost';
+          ghost.innerHTML = `<div class='title'>🎵 Aktueller Song</div><div class='small'>Titel und Jahr bleiben bis zur Bestätigung verborgen.</div>`;
+          btn.appendChild(ghost);
+        }
+
         btn.onclick = () => {
           state.selectedIndex = i;
           qs('confirmBtn').disabled = false;
@@ -397,18 +428,6 @@
           node.className = 'placementSong';
           node.innerHTML = `<div class='title'>${song.year}</div><div class='small'>${song.artist} – ${song.title}</div>`;
           placementEl.appendChild(node);
-        }
-      }
-
-      if (state.currentSong) {
-        const ghost = document.createElement('div');
-        ghost.className = 'placementSong hidden';
-        ghost.innerHTML = `<div class='title'>🎵 Aktueller Song</div><div class='small'>Titel und Jahr bleiben verborgen bis zur Bestätigung.</div>`;
-        if (state.selectedIndex === null) {
-          placementEl.prepend(ghost);
-        } else {
-          const anchor = placementEl.children[state.selectedIndex * 2];
-          placementEl.insertBefore(ghost, anchor?.nextSibling || null);
         }
       }
     }
@@ -436,27 +455,90 @@
       playerStatus.textContent = msg;
     }
 
-    async function drawSong() {
-      if (!state.deck.length) {
-        resultEl.textContent = 'Deck ist leer.';
-        return;
+    async function drawCandidateWithPreview(deck, loadPreviewFn, maxPreviewAttempts = 3) {
+      // Deterministische Deck-Semantik:
+      // - Wir ziehen bis zu `maxPreviewAttempts` Kandidaten vom Deck (top = array end).
+      // - Genau ein Song wird gespielt (Preview-Treffer oder erster Versuch als Fallback).
+      // - Alle anderen versuchten Songs werden in ihrer ursprünglichen Reihenfolge zurückgelegt.
+      const attempted = [];
+      let chosenSong = null;
+      let previewUrl = null;
+
+      while (deck.length && attempted.length < maxPreviewAttempts) {
+        const candidate = deck.pop();
+        attempted.push(candidate);
+        try {
+          previewUrl = await loadPreviewFn(candidate);
+          chosenSong = candidate;
+          break;
+        } catch {
+          // kein Preview für diesen Kandidaten, nächster Versuch
+        }
       }
-      state.currentSong = state.deck.pop();
+
+      if (!chosenSong && attempted.length) {
+        chosenSong = attempted[0];
+      }
+
+      if (!chosenSong) {
+        return { chosenSong: null, previewUrl: null, skippedNoPreview: 0 };
+      }
+
+      const chosenIndex = attempted.indexOf(chosenSong);
+      for (let i = attempted.length - 1; i >= 0; i -= 1) {
+        if (i !== chosenIndex) {
+          deck.push(attempted[i]);
+        }
+      }
+
+      return {
+        chosenSong,
+        previewUrl,
+        skippedNoPreview: Math.max(0, attempted.length - 1),
+      };
+    }
+
+    async function drawSong() {
       state.selectedIndex = null;
       qs('confirmBtn').disabled = true;
       resultEl.textContent = '';
+
+      if (!state.deck.length) {
+        state.currentSong = null;
+        currentSongEl.textContent = 'Deck ist leer.';
+        resetPlayerUi('Kein Preview geladen.');
+        return;
+      }
+
+      resetPlayerUi('Lade Song-Preview …');
+
+      const { chosenSong, previewUrl, skippedNoPreview } = await drawCandidateWithPreview(
+        state.deck,
+        loadPreview,
+        3,
+      );
+
+      if (!chosenSong) {
+        state.currentSong = null;
+        currentSongEl.textContent = 'Deck ist leer.';
+        playerStatus.textContent = 'Kein Song mehr verfügbar.';
+        renderPlacementSlots();
+        return;
+      }
+
+      state.currentSong = chosenSong;
       currentSongEl.textContent = `🎵 Song läuft … (Titel & Jahr verborgen)`;
       renderPlacementSlots();
 
-      resetPlayerUi('Lade Song-Preview …');
-      try {
-        const previewUrl = await loadPreview(state.currentSong);
+      if (previewUrl) {
         audioPlayer.src = previewUrl;
         playPauseBtn.disabled = false;
         seekBar.disabled = false;
-        playerStatus.textContent = 'Preview bereit.';
-      } catch (e) {
-        resetPlayerUi('Kein Preview verfügbar. Zieh ggf. den nächsten Song.');
+        playerStatus.textContent = skippedNoPreview > 0
+          ? `Preview bereit. ${skippedNoPreview} Song(s) ohne Preview wurden automatisch übersprungen.`
+          : 'Preview bereit.';
+      } else {
+        resetPlayerUi('Kein Preview gefunden. Dieser Zug wird ohne Audio gespielt.');
       }
     }
 
@@ -564,6 +646,59 @@
     qs('startBtn').addEventListener('click', startGame);
     qs('confirmBtn').addEventListener('click', confirmPlacement);
     qs('resetBtn').addEventListener('click', hardReset);
+
+    async function validatePreviewFallbackSemantics() {
+      const mk = id => ({ id, title: id, artist: id, year: 2000 });
+
+      const assertDeck = (label, actualDeck, expectedIds) => {
+        const actualIds = actualDeck.map(s => s.id);
+        const ok = JSON.stringify(actualIds) === JSON.stringify(expectedIds);
+        console.assert(ok, `${label} deck mismatch`, { actualIds, expectedIds });
+      };
+
+      const assertSong = (label, song, expectedId) => {
+        const actualId = song?.id ?? null;
+        console.assert(actualId === expectedId, `${label} chosen mismatch`, { actualId, expectedId });
+      };
+
+      const makeLoader = (previewIds) => async (song) => {
+        if (!previewIds.has(song.id)) throw new Error('No preview');
+        return `preview:${song.id}`;
+      };
+
+      // a1) Preview nach 1 Miss
+      {
+        const deck = [mk('base'), mk('hit'), mk('miss1')];
+        const res = await drawCandidateWithPreview(deck, makeLoader(new Set(['hit'])), 3);
+        assertSong('a1', res.chosenSong, 'hit');
+        console.assert(res.previewUrl === 'preview:hit', 'a1 preview mismatch', { previewUrl: res.previewUrl });
+        assertDeck('a1', deck, ['base', 'miss1']);
+      }
+
+      // a2) Preview nach 2 Misses
+      {
+        const deck = [mk('base'), mk('hit'), mk('miss2'), mk('miss1')];
+        const res = await drawCandidateWithPreview(deck, makeLoader(new Set(['hit'])), 3);
+        assertSong('a2', res.chosenSong, 'hit');
+        console.assert(res.previewUrl === 'preview:hit', 'a2 preview mismatch', { previewUrl: res.previewUrl });
+        assertDeck('a2', deck, ['base', 'miss2', 'miss1']);
+      }
+
+      // b) Kein Preview innerhalb Attempt-Budget
+      {
+        const deck = [mk('base'), mk('miss3'), mk('miss2'), mk('miss1')];
+        const res = await drawCandidateWithPreview(deck, makeLoader(new Set()), 3);
+        assertSong('b', res.chosenSong, 'miss1');
+        console.assert(res.previewUrl === null, 'b preview should be null', { previewUrl: res.previewUrl });
+        assertDeck('b', deck, ['base', 'miss3', 'miss2']);
+      }
+
+      console.info('Preview fallback validation checks executed.');
+    }
+
+    validatePreviewFallbackSemantics().catch((err) => {
+      console.error('Preview fallback validation checks failed to execute', err);
+    });
 
     resetPlayerUi();
     rebuildNameInputs();

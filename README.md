@@ -9,8 +9,11 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
 - Audio-Preview (Play/Pause + Seek)
 - Verbesserte Platzierungs-UI:
   - Einfügepunkte klar zwischen den Timeline-Karten
-  - sichtbare "Aktueller Song"-Platzhalterkarte an der gewählten Position
+  - ausgewählter Einfügepunkt ist ein **einheitliches Control** inkl. "Aktueller Song"-Status
   - große, mobile-freundliche Tap-Flächen ohne horizontales Slot-Gefummel
+- Robuster Preview-Fallback:
+  - bei fehlendem Preview wird automatisch bis zu 3x der nächste Song versucht
+  - falls weiterhin kein Preview gefunden wird, läuft der Zug deterministisch ohne Audio weiter (kein Deadlock)
 - Gewinner bei 10 korrekt eingeordneten Songs
 
 ## Start
