@@ -75,23 +75,53 @@
       overflow-x: auto;
       padding-bottom: 6px;
     }
-    .slot {
-      min-width: 64px;
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      padding: 8px;
-      cursor: pointer;
-    }
-    .slot:hover { border-color: #64748b; color: var(--text); }
     .song {
       min-width: 190px;
       background: #0b1220;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 8px;
+    }
+     .placementBoard {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .insertBtn {
+      width: 100%;
+      border: 1px dashed #64748b;
+      background: #111827;
+      color: var(--muted);
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .insertBtn.active {
+      border-style: solid;
+      border-color: #60a5fa;
+      color: #bfdbfe;
+      background: rgba(59, 130, 246, 0.18);
+      box-shadow: 0 0 0 1px #60a5fa inset;
+    }
+    .insertBtn:hover { color: var(--text); border-color: #94a3b8; }
+    .placementSong {
+      border: 1px solid var(--border);
+      background: #0b1220;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .placementSong.hidden {
+      border-color: #475569;
+      background: linear-gradient(135deg, #111827, #0b1220);
+    }
+    .placementSong .title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    @media (max-width: 900px) {
+      .placementSong { padding: 12px; }
+      .insertBtn { padding: 12px; }
     }
     .song b { display: block; }
     .small { font-size: .86rem; color: var(--muted); }
@@ -131,7 +161,7 @@
     <section class="card">
       <h1>🎵 Hitster – Fan Remake (ohne Karten)</h1>
       <p>Spielidee: Songs korrekt in den eigenen Zeitstrahl einordnen. Gewinner ist, wer zuerst 10 Karten korrekt hat.</p>
-      <p class="small">Hinweis: Inoffizielles Fan-Projekt. Nutzt Spotify-Embeds für Wiedergabe.</p>
+      <p class="small">Hinweis: Inoffizielles Fan-Projekt mit externen Song-Previews.</p>
     </section>
 
     <section class="card" id="setup-card">
@@ -158,7 +188,6 @@
         <div class="miniPlayer">
           <div class="row" style="margin-bottom:8px;">
             <button id="playPauseBtn" class="secondary" disabled>▶️ Play</button>
-            <button id="shazamBtn" class="secondary">🎙️ Shazam</button>
             <span id="playerStatus" class="small">Kein Preview geladen.</span>
           </div>
           <input id="seekBar" class="progress" type="range" min="0" max="100" value="0" disabled />
@@ -166,8 +195,8 @@
         </div>
 
         <h3 style="margin-top:12px;">Platzierung wählen</h3>
-        <p class="small">Klicke auf eine Position zwischen den Karten des aktiven Spielers.</p>
-        <div id="placement" class="timeline"></div>
+        <p class="small">Wähle den Einfügepunkt im Zeitstrahl. Der gezogene Song bleibt bis zur Bestätigung verborgen.</p>
+        <div id="placement" class="placementBoard"></div>
 
         <div class="row" style="margin-top:10px;">
           <button id="confirmBtn" disabled>Platzierung bestätigen</button>
@@ -289,7 +318,6 @@
     const currentSongEl = qs('currentSong');
     const audioPlayer = qs('audioPlayer');
     const playPauseBtn = qs('playPauseBtn');
-    const shazamBtn = qs('shazamBtn');
     const seekBar = qs('seekBar');
     const playerStatus = qs('playerStatus');
 
@@ -348,16 +376,40 @@
       const p = state.players[state.turn];
       placementEl.innerHTML = '';
       const slots = p.timeline.length + 1;
-      for (let i = 0; i < slots; i++) {
-        const slot = document.createElement('button');
-        slot.className = 'slot';
-        slot.textContent = `Position ${i + 1}`;
-        slot.onclick = () => {
+
+      const createInsertButton = (i) => {
+        const btn = document.createElement('button');
+        btn.className = 'insertBtn' + (state.selectedIndex === i ? ' active' : '');
+        btn.textContent = `⬇ Hier einfügen (Position ${i + 1})`;
+        btn.onclick = () => {
           state.selectedIndex = i;
-          [...placementEl.children].forEach((x, idx) => x.style.outline = idx === i ? '2px solid #60a5fa' : 'none');
           qs('confirmBtn').disabled = false;
+          renderPlacementSlots();
         };
-        placementEl.appendChild(slot);
+        return btn;
+      };
+
+      for (let i = 0; i < slots; i++) {
+        placementEl.appendChild(createInsertButton(i));
+        if (i < p.timeline.length) {
+          const song = p.timeline[i];
+          const node = document.createElement('div');
+          node.className = 'placementSong';
+          node.innerHTML = `<div class='title'>${song.year}</div><div class='small'>${song.artist} – ${song.title}</div>`;
+          placementEl.appendChild(node);
+        }
+      }
+
+      if (state.currentSong) {
+        const ghost = document.createElement('div');
+        ghost.className = 'placementSong hidden';
+        ghost.innerHTML = `<div class='title'>🎵 Aktueller Song</div><div class='small'>Titel und Jahr bleiben verborgen bis zur Bestätigung.</div>`;
+        if (state.selectedIndex === null) {
+          placementEl.prepend(ghost);
+        } else {
+          const anchor = placementEl.children[state.selectedIndex * 2];
+          placementEl.insertBefore(ghost, anchor?.nextSibling || null);
+        }
       }
     }
 
@@ -394,6 +446,7 @@
       qs('confirmBtn').disabled = true;
       resultEl.textContent = '';
       currentSongEl.textContent = `🎵 Song läuft … (Titel & Jahr verborgen)`;
+      renderPlacementSlots();
 
       resetPlayerUi('Lade Song-Preview …');
       try {
@@ -505,10 +558,6 @@
     seekBar.addEventListener('input', () => {
       if (!audioPlayer.duration) return;
       audioPlayer.currentTime = (Number(seekBar.value) / 100) * audioPlayer.duration;
-    });
-
-    shazamBtn.addEventListener('click', () => {
-      window.open('https://www.shazam.com/de/home', '_blank', 'noopener');
     });
 
     qs('playerCount').addEventListener('change', rebuildNameInputs);

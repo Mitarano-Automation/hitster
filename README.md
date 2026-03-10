@@ -4,29 +4,26 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
 
 ## Features
 
-- Keine Karten nötig
-- Eingabe von Spieleranzahl + Namen
-- Songtitel bleibt bis zur Auflösung verborgen
-- Spotify-Preview mit Play/Pause
-- Shazam-Button zur schnellen Songerkennung
-- Multiplayer-Session-Code (Host/Join) für mehrere Smartphones
+- Lokales Multiplayer-Spiel für 2–6 Spieler
+- Songtitel und Jahr bleiben bis zur Bestätigung verborgen
+- Audio-Preview (Play/Pause + Seek)
+- Verbesserte Platzierungs-UI:
+  - Einfügepunkte klar zwischen den Timeline-Karten
+  - sichtbare "Aktueller Song"-Platzhalterkarte an der gewählten Position
+  - große, mobile-freundliche Tap-Flächen ohne horizontales Slot-Gefummel
 - Gewinner bei 10 korrekt eingeordneten Songs
 
 ## Start
 
-Einfach `index.html` im Browser öffnen (oder via GitHub Pages hosten).
+Einfach `index.html` im Browser öffnen (oder statisch hosten).
 
 ## Regeln (kurz)
 
 1. Jeder Spieler startet mit einem Song auf dem Zeitstrahl.
 2. Im Zug wird ein neuer Song gezogen und abgespielt.
-3. Der aktive Spieler setzt ihn an eine Position seines Zeitstrahls.
-4. Korrekt = Karte bleibt, falsch = Karte weg.
-5. Bei 10 korrekten Karten gewinnt der Spieler.
-
-## Quellen / Recherche
-
-Allgemeine Spielidee und Ablauf wurden anhand öffentlich verfügbarer Hitster-Regelbeschreibungen umgesetzt.
+3. Der aktive Spieler wählt den Einfügepunkt im eigenen Zeitstrahl.
+4. Korrekt = Karte bleibt, falsch = Karte wird nicht hinzugefügt.
+5. Bei 10 korrekt eingeordneten Songs gewinnt der Spieler.
 
 ## Hinweis
 
