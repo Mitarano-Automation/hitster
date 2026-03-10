@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Hitster (Fan Demo) – Timeline Musikspiel</title>
   <style>
     :root {
@@ -588,11 +591,12 @@
       playerStatus.textContent = msg;
     }
 
-    async function drawCandidateWithPreview(deck, loadPreviewFn, maxPreviewAttempts = 3) {
+    async function drawCandidateWithPreview(deck, loadPreviewFn, maxPreviewAttempts = Infinity) {
       // Deterministische Deck-Semantik:
-      // - Wir ziehen bis zu `maxPreviewAttempts` Kandidaten vom Deck (top = array end).
-      // - Genau ein Song wird gespielt (Preview-Treffer oder erster Versuch als Fallback).
-      // - Alle anderen versuchten Songs werden in ihrer ursprünglichen Reihenfolge zurückgelegt.
+      // - Wir ziehen Kandidaten vom Deck (top = array end), bis ein Preview gefunden wird
+      //   oder das Deck leer ist.
+      // - Songs ohne Preview werden (bei Erfolg) in derselben Reihenfolge zurückgelegt.
+      // - Gibt es im gesamten geprüften Bereich kein Preview, gibt es keinen Zug-Song.
       const attempted = [];
       let chosenSong = null;
       let previewUrl = null;
@@ -609,12 +613,8 @@
         }
       }
 
-      if (!chosenSong && attempted.length) {
-        chosenSong = attempted[0];
-      }
-
       if (!chosenSong) {
-        return { chosenSong: null, previewUrl: null, skippedNoPreview: 0 };
+        return { chosenSong: null, previewUrl: null, skippedNoPreview: attempted.length };
       }
 
       const chosenIndex = attempted.indexOf(chosenSong);
@@ -648,13 +648,12 @@
       const { chosenSong, previewUrl } = await drawCandidateWithPreview(
         state.deck,
         loadPreview,
-        3,
       );
 
       if (!chosenSong) {
         state.currentSong = null;
-        currentSongEl.textContent = 'Deck ist leer.';
-        playerStatus.textContent = 'Kein Song mehr verfügbar.';
+        currentSongEl.textContent = 'Kein Song mit spielbarer Preview mehr im Deck.';
+        resetPlayerUi('Kein Song mit Preview verfügbar.');
         renderPlacementSlots();
         return;
       }
@@ -663,14 +662,10 @@
       currentSongEl.textContent = '';
       renderPlacementSlots();
 
-      if (previewUrl) {
-        audioPlayer.src = previewUrl;
-        playPauseBtn.disabled = false;
-        seekBar.disabled = false;
-        playerStatus.textContent = 'Preview bereit.';
-      } else {
-        resetPlayerUi('Kein Preview gefunden. Dieser Zug wird ohne Audio gespielt.');
-      }
+      audioPlayer.src = previewUrl;
+      playPauseBtn.disabled = false;
+      seekBar.disabled = false;
+      playerStatus.textContent = 'Preview bereit.';
     }
 
     function isPlacementCorrect(timeline, song, index) {
@@ -779,7 +774,7 @@
     qs('confirmBtn').addEventListener('click', confirmPlacement);
     qs('resetBtn').addEventListener('click', hardReset);
 
-    async function validatePreviewFallbackSemantics() {
+    async function validatePreviewSelectionSemantics() {
       const mk = id => ({ id, title: id, artist: id, year: 2000 });
 
       const assertDeck = (label, actualDeck, expectedIds) => {
@@ -801,35 +796,35 @@
       // a1) Preview nach 1 Miss
       {
         const deck = [mk('base'), mk('hit'), mk('miss1')];
-        const res = await drawCandidateWithPreview(deck, makeLoader(new Set(['hit'])), 3);
+        const res = await drawCandidateWithPreview(deck, makeLoader(new Set(['hit'])));
         assertSong('a1', res.chosenSong, 'hit');
         console.assert(res.previewUrl === 'preview:hit', 'a1 preview mismatch', { previewUrl: res.previewUrl });
         assertDeck('a1', deck, ['base', 'miss1']);
       }
 
-      // a2) Preview nach 2 Misses
+      // a2) Preview nach 2 Misses, Reihenfolge der Skips bleibt erhalten
       {
         const deck = [mk('base'), mk('hit'), mk('miss2'), mk('miss1')];
-        const res = await drawCandidateWithPreview(deck, makeLoader(new Set(['hit'])), 3);
+        const res = await drawCandidateWithPreview(deck, makeLoader(new Set(['hit'])));
         assertSong('a2', res.chosenSong, 'hit');
         console.assert(res.previewUrl === 'preview:hit', 'a2 preview mismatch', { previewUrl: res.previewUrl });
         assertDeck('a2', deck, ['base', 'miss2', 'miss1']);
       }
 
-      // b) Kein Preview innerhalb Attempt-Budget
+      // b) Kein Preview im restlichen Deck -> kein Song für den Zug
       {
         const deck = [mk('base'), mk('miss3'), mk('miss2'), mk('miss1')];
-        const res = await drawCandidateWithPreview(deck, makeLoader(new Set()), 3);
-        assertSong('b', res.chosenSong, 'miss1');
+        const res = await drawCandidateWithPreview(deck, makeLoader(new Set()));
+        assertSong('b', res.chosenSong, null);
         console.assert(res.previewUrl === null, 'b preview should be null', { previewUrl: res.previewUrl });
-        assertDeck('b', deck, ['base', 'miss3', 'miss2']);
+        assertDeck('b', deck, []);
       }
 
-      console.info('Preview fallback validation checks executed.');
+      console.info('Preview selection validation checks executed.');
     }
 
-    validatePreviewFallbackSemantics().catch((err) => {
-      console.error('Preview fallback validation checks failed to execute', err);
+    validatePreviewSelectionSemantics().catch((err) => {
+      console.error('Preview selection validation checks failed to execute', err);
     });
 
     resetPlayerUi();
