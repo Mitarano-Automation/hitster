@@ -71,38 +71,36 @@
     .timeline {
       display: grid;
       grid-auto-flow: column;
-      grid-auto-columns: minmax(155px, 170px);
-      gap: 8px;
+      grid-auto-columns: minmax(152px, 164px);
+      gap: 6px;
       overflow-x: auto;
-      padding: 8px;
-      margin-top: 8px;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      background: linear-gradient(180deg, #0a1220 0%, #0b1220 100%);
+      padding: 6px 1px 2px;
+      margin-top: 6px;
       scrollbar-width: thin;
       scroll-snap-type: x proximity;
     }
     .timeline.dense {
-      grid-auto-columns: minmax(138px, 150px);
+      grid-auto-columns: minmax(136px, 146px);
+      gap: 5px;
     }
     .song {
       min-width: 0;
       background: #0f1a2d;
       border: 1px solid #334155;
       border-radius: 8px;
-      padding: 8px;
+      padding: 7px 8px;
       scroll-snap-align: start;
     }
     .song b {
       display: inline-block;
-      font-size: .95rem;
-      margin-bottom: 4px;
+      font-size: .9rem;
+      margin-bottom: 3px;
     }
     .song .songMeta {
       display: grid;
-      gap: 2px;
-      line-height: 1.22;
-      font-size: .78rem;
+      gap: 1px;
+      line-height: 1.18;
+      font-size: .75rem;
       color: var(--muted);
     }
     .song .songMeta .songTitle {
@@ -111,10 +109,10 @@
     }
     @media (max-width: 900px) {
       .timeline {
-        grid-auto-columns: minmax(170px, 74vw);
+        grid-auto-columns: minmax(160px, 72vw);
       }
       .timeline.dense {
-        grid-auto-columns: minmax(155px, 68vw);
+        grid-auto-columns: minmax(146px, 64vw);
       }
     }
      .placementBoard {
@@ -179,9 +177,78 @@
     }
     .small { font-size: .86rem; color: var(--muted); }
 
-    .players { display: grid; gap: 10px; }
-    .playerBox { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
-    .playerBox.active { border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa inset; }
+    .players {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+    .playerBox {
+      border: 1px solid #273446;
+      border-radius: 10px;
+      padding: 7px 8px 8px;
+      background: rgba(11, 18, 32, 0.45);
+    }
+    .playerBox.active {
+      border-color: #60a5fa;
+      background: rgba(37, 99, 235, 0.12);
+      box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.45) inset;
+      padding: 9px 10px 10px;
+    }
+    .playerHead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .playerName {
+      font-weight: 700;
+      font-size: .95rem;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .playerCount {
+      font-size: .76rem;
+      color: #cbd5e1;
+      background: #172235;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+    .playerBox.active .playerCount {
+      border-color: #60a5fa;
+      background: rgba(30, 64, 175, 0.35);
+    }
+    .turnBadge {
+      display: inline-flex;
+      margin-left: 6px;
+      font-size: .68rem;
+      border-radius: 999px;
+      padding: 2px 7px;
+      color: #dbeafe;
+      background: rgba(59, 130, 246, 0.25);
+      border: 1px solid rgba(96, 165, 250, 0.7);
+      vertical-align: middle;
+    }
+    .playerBox:not(.active) .timeline {
+      padding-top: 4px;
+      margin-top: 4px;
+    }
+    .playerBox:not(.active) .song {
+      padding: 5px 7px;
+      border-radius: 7px;
+      border-color: #2b3a50;
+      background: #0e1728;
+    }
+    .playerBox:not(.active) .song b {
+      font-size: .82rem;
+      margin-bottom: 2px;
+    }
+    .playerBox:not(.active) .song .songMeta {
+      font-size: .69rem;
+    }
 
     .miniPlayer {
       background: #0b1220;
@@ -400,9 +467,28 @@
       state.players.forEach((p, idx) => {
         const box = document.createElement('div');
         box.className = 'playerBox' + (idx === state.turn ? ' active' : '');
-        const title = document.createElement('div');
-        title.innerHTML = `<b>${p.name}</b> <span class="small">(${p.timeline.length}/${state.target})</span>`;
-        box.appendChild(title);
+
+        const head = document.createElement('div');
+        head.className = 'playerHead';
+
+        const name = document.createElement('span');
+        name.className = 'playerName';
+        name.textContent = p.name;
+
+        const count = document.createElement('span');
+        count.className = 'playerCount';
+        count.textContent = `${p.timeline.length}/${state.target}`;
+
+        if (idx === state.turn) {
+          const badge = document.createElement('span');
+          badge.className = 'turnBadge';
+          badge.textContent = 'am Zug';
+          name.appendChild(badge);
+        }
+
+        head.appendChild(name);
+        head.appendChild(count);
+        box.appendChild(head);
 
         const tl = document.createElement('div');
         tl.className = 'timeline' + (p.timeline.length > 8 ? ' dense' : '');
