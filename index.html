@@ -51,7 +51,12 @@
     button.secondary { background: #475569; }
     button:disabled { opacity: .55; cursor: not-allowed; }
     .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) clamp(320px, 34vw, 420px);
+      gap: 14px;
+      align-items: start;
+    }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
     .pill {
@@ -177,6 +182,21 @@
     }
     .small { font-size: .86rem; color: var(--muted); }
 
+    .playersPanel {
+      display: flex;
+      flex-direction: column;
+      height: min(74vh, 760px);
+      min-height: 300px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .playersViewport {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-right: -4px;
+    }
     .players {
       display: grid;
       gap: 8px;
@@ -248,6 +268,18 @@
     }
     .playerBox:not(.active) .song .songMeta {
       font-size: .69rem;
+    }
+    @media (max-width: 900px) {
+      .playersPanel {
+        height: auto;
+        max-height: none;
+        min-height: 0;
+      }
+      .playersViewport {
+        overflow-y: visible;
+        padding-right: 0;
+        margin-right: 0;
+      }
     }
 
     .miniPlayer {
@@ -324,9 +356,11 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card playersPanel">
         <h2>Spieler & Zeitstrahl</h2>
-        <div id="players" class="players"></div>
+        <div class="playersViewport">
+          <div id="players" class="players"></div>
+        </div>
       </div>
     </section>
   </main>
