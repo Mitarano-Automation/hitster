@@ -341,11 +341,11 @@
       ["Billie Eilish","bad guy",2019,"2Fxmhks0bxGSBdJ92vM42m"],
       ["Bon Jovi","Livin' On A Prayer",1986,"37ZJ0p5Jm13JPevGcx4SkF"],
       ["Britney Spears","...Baby One More Time",1998,"3MjUtNVVq3C8Fn0MP3zhXa"],
-      ["Bruno Mars","Uptown Funk",2014,"32OlwWuMpZ6b0aN2RZOeMS"],
+      ["Bonnie Tyler","Total Eclipse of the Heart",1983,"1504111288"],
       ["Bryan Adams","Summer Of '69",1984,"6WJmI7e0x4mY8M4E2sGxkM"],
       ["Camila Cabello","Havana",2017,"1rfofaqEpACxVEHIZBJe6W"],
       ["Coldplay","Viva La Vida",2008,"1mea3bSkSGXuIRvnydlB5b"],
-      ["Daft Punk","One More Time",2000,"0DiWol3AO6WpXZgp0goxAV"],
+      ["The Verve","Bitter Sweet Symphony",1997,"1443258189"],
       ["David Guetta","Titanium",2011,"0lHAMNU8RGiIObScrsRgmP"],
       ["Depeche Mode","Enjoy the Silence",1990,"1EjQRTG53jsinzk2xlVVJP"],
       ["Dua Lipa","Levitating",2020,"39LLxExYz6ewLAcYrzQQyP"],
@@ -412,13 +412,23 @@
       ...SONGS_BASE[i % SONGS_BASE.length]
     }));
 
+    function normalizeSongKeyPart(value) {
+      return String(value || '')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
     function buildGameDeck() {
       // Garantiert eindeutige Songs pro Spielrunde (keine Wiederholungen innerhalb eines laufenden Spiels).
+      // Wichtig: Eindeutigkeit nach Song-Identität, nicht nach externer Track-ID.
       const seen = new Set();
       const uniqueSongs = [];
 
       SONGS.forEach((song) => {
-        const key = song.trackId || `${song.artist}::${song.title}::${song.year}`;
+        const key = [song.artist, song.title, song.year].map(normalizeSongKeyPart).join('::');
         if (seen.has(key)) return;
         seen.add(key);
         uniqueSongs.push(song);
@@ -568,14 +578,47 @@
       }
     }
 
+    function normalizeSearchText(value) {
+      return String(value || '')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
+    function scorePreviewCandidate(song, item) {
+      const artist = normalizeSearchText(song.artist);
+      const title = normalizeSearchText(song.title);
+      const candidateArtist = normalizeSearchText(item?.artistName);
+      const candidateTitle = normalizeSearchText(item?.trackName);
+      let score = 0;
+
+      if (candidateTitle === title) score += 6;
+      else if (candidateTitle.includes(title) || title.includes(candidateTitle)) score += 3;
+
+      if (candidateArtist === artist) score += 4;
+      else if (candidateArtist.includes(artist) || artist.includes(candidateArtist)) score += 2;
+
+      return score;
+    }
+
     async function loadPreview(song) {
       // neutral preview source (no title shown in UI): iTunes Search API
+      // Robustere Auswahl: mehrere Treffer prüfen statt blind nur den ersten zu nehmen.
       const term = encodeURIComponent(`${song.artist} ${song.title}`);
-      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=1`;
+      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('Preview-Suche fehlgeschlagen');
       const data = await res.json();
-      const preview = data?.results?.[0]?.previewUrl;
+      const results = Array.isArray(data?.results) ? data.results : [];
+      const candidates = results
+        .filter((item) => item?.previewUrl)
+        .map((item) => ({ item, score: scorePreviewCandidate(song, item) }))
+        .sort((a, b) => b.score - a.score);
+
+      const preview = candidates[0]?.item?.previewUrl;
       if (!preview) throw new Error('Kein Preview gefunden');
       return preview;
     }
