@@ -591,8 +591,8 @@
     function scorePreviewCandidate(song, item) {
       const artist = normalizeSearchText(song.artist);
       const title = normalizeSearchText(song.title);
-      const candidateArtist = normalizeSearchText(item?.artistName);
-      const candidateTitle = normalizeSearchText(item?.trackName);
+      const candidateArtist = normalizeSearchText(item?.artistName || item?.artist?.name);
+      const candidateTitle = normalizeSearchText(item?.trackName || item?.title);
       let score = 0;
 
       if (candidateTitle === title) score += 6;
@@ -604,23 +604,50 @@
       return score;
     }
 
-    async function loadPreview(song) {
-      // neutral preview source (no title shown in UI): iTunes Search API
-      // Robustere Auswahl: mehrere Treffer prüfen statt blind nur den ersten zu nehmen.
+    async function fetchBestItunesPreview(song) {
       const term = encodeURIComponent(`${song.artist} ${song.title}`);
       const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Preview-Suche fehlgeschlagen');
+      if (!res.ok) throw new Error('iTunes-Suche fehlgeschlagen');
       const data = await res.json();
       const results = Array.isArray(data?.results) ? data.results : [];
       const candidates = results
         .filter((item) => item?.previewUrl)
         .map((item) => ({ item, score: scorePreviewCandidate(song, item) }))
         .sort((a, b) => b.score - a.score);
+      return candidates[0]?.item?.previewUrl || null;
+    }
 
-      const preview = candidates[0]?.item?.previewUrl;
-      if (!preview) throw new Error('Kein Preview gefunden');
-      return preview;
+    async function fetchBestDeezerPreview(song) {
+      const query = encodeURIComponent(`artist:"${song.artist}" track:"${song.title}"`);
+      const url = `https://api.deezer.com/search?q=${query}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Deezer-Suche fehlgeschlagen');
+      const data = await res.json();
+      const results = Array.isArray(data?.data) ? data.data : [];
+      const candidates = results
+        .filter((item) => item?.preview)
+        .map((item) => ({ item, score: scorePreviewCandidate(song, item) }))
+        .sort((a, b) => b.score - a.score);
+      return candidates[0]?.item?.preview || null;
+    }
+
+    async function loadPreview(song) {
+      // Mehrquellen-Fallback: zuerst iTunes, dann Deezer.
+      const previewFetchers = [fetchBestItunesPreview, fetchBestDeezerPreview];
+      let lastError = null;
+
+      for (const fetcher of previewFetchers) {
+        try {
+          const preview = await fetcher(song);
+          if (preview) return preview;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (lastError) throw lastError;
+      throw new Error('Kein Preview gefunden');
     }
 
     function resetPlayerUi(msg = 'Kein Preview geladen.') {
