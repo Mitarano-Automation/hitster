@@ -328,89 +328,209 @@
   <script>
     // Curated demo set (replace/extend freely)
     const SONGS_BASE = [
-      ["A-ha","Take On Me",1985,"2WfaOiMkCvy7F5fcp2zZ8L"],
-      ["ABBA","Dancing Queen",1976,"0GjEhVFGZW8afUYGChu3Rr"],
-      ["AC/DC","Back In Black",1980,"08mG3Y1vljYA6bvDt4Wqkj"],
-      ["Adele","Rolling in the Deep",2010,"1c8gk2PeTE04A1pIDH9YMk"],
-      ["Aerosmith","I Don't Want to Miss a Thing",1998,"225xvV8r1yKMHErSWivnow"],
-      ["Amy Winehouse","Rehab",2006,"3FAclTFfvUuQYnEsptbK8w"],
-      ["Arctic Monkeys","Do I Wanna Know?",2013,"5FVd6KXrgO9B3JPmC8OPst"],
-      ["Avicii","Wake Me Up",2013,"4CDBl3jHfMKeB6xVGYN6Jm"],
-      ["Backstreet Boys","I Want It That Way",1999,"47BBI51FKFwOMlIiX6m8ya"],
-      ["Bee Gees","Stayin' Alive",1977,"5ubvP9oKmxLUVq506fgLhk"],
-      ["Billie Eilish","bad guy",2019,"2Fxmhks0bxGSBdJ92vM42m"],
-      ["Bon Jovi","Livin' On A Prayer",1986,"37ZJ0p5Jm13JPevGcx4SkF"],
-      ["Britney Spears","...Baby One More Time",1998,"3MjUtNVVq3C8Fn0MP3zhXa"],
-      ["Bruno Mars","Uptown Funk",2014,"32OlwWuMpZ6b0aN2RZOeMS"],
-      ["Bryan Adams","Summer Of '69",1984,"6WJmI7e0x4mY8M4E2sGxkM"],
-      ["Camila Cabello","Havana",2017,"1rfofaqEpACxVEHIZBJe6W"],
-      ["Coldplay","Viva La Vida",2008,"1mea3bSkSGXuIRvnydlB5b"],
-      ["Daft Punk","One More Time",2000,"0DiWol3AO6WpXZgp0goxAV"],
-      ["David Guetta","Titanium",2011,"0lHAMNU8RGiIObScrsRgmP"],
-      ["Depeche Mode","Enjoy the Silence",1990,"1EjQRTG53jsinzk2xlVVJP"],
-      ["Dua Lipa","Levitating",2020,"39LLxExYz6ewLAcYrzQQyP"],
-      ["Eagles","Hotel California",1976,"40riOy7x9W7GXjyGp4pjAv"],
-      ["Ed Sheeran","Shape of You",2017,"7qiZfU4dY1lWllzX7mPBI3"],
-      ["Elton John","I'm Still Standing",1983,"1jDJFeK9x3OZboIAHsY9k2"],
-      ["Eminem","Lose Yourself",2002,"5Z01UMMf7V1o0MzF86s6WJ"],
-      ["Europe","The Final Countdown",1986,"3MrRksHupTVEQ7YbA0FsZK"],
-      ["Fleetwood Mac","Dreams",1977,"0ofHAoxe9vBkTCp2UQIavz"],
-      ["Foo Fighters","Everlong",1997,"5UWwZ5lm5PKu6eKsHAGxOk"],
-      ["Frank Sinatra","My Way",1969,"3spdoTYpuCpmq19tuD0bOe"],
-      ["George Michael","Careless Whisper",1984,"1JSTJqkT5qHq8MDJnJbRE1"],
-      ["Guns N' Roses","Sweet Child O' Mine",1987,"7o2CTH4ctstm8TNelqjb51"],
-      ["Harry Styles","As It Was",2022,"4LRPiXqCikLlN15c3yImP7"],
-      ["Imagine Dragons","Believer",2017,"0pqnGHJpmpxLKifKRmU6WP"],
-      ["Journey","Don't Stop Believin'",1981,"4bHsxqR3GMrXTxEPLuK5ue"],
-      ["Justin Timberlake","CAN'T STOP THE FEELING!",2016,"6JV2JOEocMgcZxYSZelKcc"],
-      ["Katy Perry","Firework",2010,"4lCv7b86sLynZbXhfScfm2"],
-      ["Lady Gaga","Poker Face",2008,"1QV6tiMFM6fSOKOGLMHYYg"],
-      ["Linkin Park","Numb",2003,"2nLtzopw4rPReszdYBJU6h"],
-      ["Lorde","Royals",2013,"08Zq5Tm9ta4RfSu8n8xibN"],
-      ["Luis Fonsi","Despacito",2017,"6habFhsOp2NvshLv26DqMb"],
-      ["Macklemore & Ryan Lewis","Can't Hold Us",2011,"3bidbhpOYeV4knp8AIu8Xn"],
-      ["Madonna","Like a Prayer",1989,"1z3ugFmUKoCzGsI6jdY4Ci"],
-      ["Mark Ronson","Uptown Funk",2014,"32OlwWuMpZ6b0aN2RZOeMS"],
-      ["Maroon 5","Sugar",2014,"5d6Mjuu2uCGRPYpFjGpCX5"],
-      ["Michael Jackson","Billie Jean",1982,"5ChkMS8OtdzJeqyybCc9R5"],
-      ["Mr. Probz","Waves (Robin Schulz Remix)",2014,"1HFfMOxCAT4GAwaPfCdmUs"],
-      ["Nirvana","Smells Like Teen Spirit",1991,"5ghIJDpPoe3CfHMGu71E6T"],
-      ["No Doubt","Don't Speak",1995,"4BggEwLhGfrbrl7JBhC8EC"],
-      ["Oasis","Wonderwall",1995,"5qqabIl2vWzo9ApSC317sa"],
-      ["OneRepublic","Counting Stars",2013,"2tpWsVSb9UEmDRxAl1zhX1"],
-      ["Outkast","Hey Ya!",2003,"2PpruBYCo4H7WOBJ7Q2EwM"],
-      ["Passenger","Let Her Go",2012,"2jyj67w9uoHhU7fB5v5Dgq"],
-      ["Pharrell Williams","Happy",2013,"60nZcImufyMA1MKQY3dcCH"],
-      ["Pink Floyd","Another Brick in the Wall, Pt. 2",1979,"4gMgiXfqyzZLMhsksGmbQV"],
-      ["Queen","Bohemian Rhapsody",1975,"4u7EnebtmKWzUH433cf5Qv"],
-      ["R.E.M.","Losing My Religion",1991,"31AOj9sFz2gM0O3hMARRBx"],
-      ["Rihanna","Umbrella",2007,"49FYlytm3dAAraYgpoJZux"],
-      ["Rick Astley","Never Gonna Give You Up",1987,"4cOdK2wGLETKBW3PvgPWqT"],
-      ["Robin Schulz","Sugar",2015,"4sJ0NK4gvG3VxoaBdkIu6a"],
-      ["Shakira","Hips Don't Lie",2005,"3ZFTkvIE7kyPt6Nu3PEa7V"],
-      ["Sia","Chandelier",2014,"2f7yH7f2aY65h6h4f2vJ1F"],
-      ["Simple Minds","Don't You (Forget About Me)",1985,"3fH4KjXFYMmljxrcGrbPj9"],
-      ["Spice Girls","Wannabe",1996,"1Je1IMUlBXcx1Fz0WE7oPT"],
-      ["Survivor","Eye of the Tiger",1982,"2HHtWyy5CgaQbC7XSoOb0e"],
-      ["Taio Cruz","Dynamite",2010,"0b1sIQumIAsNbqAoIClSpy"],
-      ["The Beatles","Hey Jude",1968,"7vGuf3Y35N4wmASOKLUVVU"],
-      ["The Cranberries","Zombie",1994,"7EZC6E7UjZe63f1jRmkWxt"],
-      ["The Killers","Mr. Brightside",2003,"003vvx7Niy0yvhvHt4a68B"],
-      ["The Police","Every Breath You Take",1983,"1JSTJqkT5qHq8MDJnJbRE1"],
-      ["The Weeknd","Blinding Lights",2019,"0VjIjW4GlUZAMYd2vXMi3b"],
-      ["Tones And I","Dance Monkey",2019,"1rgnBhdG2JDFTbYkYRZAku"],
-      ["Toto","Africa",1982,"2374M0fQpWi3dLnB54qaLX"],
-      ["U2","With Or Without You",1987,"6ADSaE87h8Y3lccZlBJdXH"],
-      ["Vanessa Carlton","A Thousand Miles",2002,"4w1lzcaoZ1IC2K5TwjalRP"],
-      ["Wham!","Wake Me Up Before You Go-Go",1984,"0ikz6tENMONtK6qGkOrU3c"],
-      ["Whitney Houston","I Wanna Dance with Somebody",1987,"2tUBqZG2AbRi7Q0BIrVrEj"],
-      ["Wiz Khalifa","See You Again",2015,"2JzZzZUQj3Qff7wapcbKjc"],
-      ["ZAYN","PILLOWTALK",2016,"0PDUDa38GO8lMxLCRc4lL1"]
-    ].map(([artist,title,year,trackId]) => ({ artist, title, year, trackId }));
+      { artist: "A-ha", title: "Take On Me", year: 1985 },
+      { artist: "ABBA", title: "Dancing Queen", year: 1976 },
+      { artist: "AC/DC", title: "Back In Black", year: 1980 },
+      { artist: "Adele", title: "Rolling in the Deep", year: 2010 },
+      { artist: "Aerosmith", title: "I Don't Want to Miss a Thing", year: 1998 },
+      { artist: "Alanis Morissette", title: "Ironic", year: 1995 },
+      { artist: "a-ha", title: "The Sun Always Shines on T.V.", year: 1985 },
+      { artist: "Alicia Keys", title: "No One", year: 2007 },
+      { artist: "Amy Winehouse", title: "Rehab", year: 2006 },
+      { artist: "Arctic Monkeys", title: "Do I Wanna Know?", year: 2013 },
+      { artist: "Avicii", title: "Wake Me Up", year: 2013 },
+      { artist: "Backstreet Boys", title: "I Want It That Way", year: 1999 },
+      { artist: "Bee Gees", title: "Stayin' Alive", year: 1977 },
+      { artist: "Billie Eilish", title: "bad guy", year: 2019 },
+      { artist: "Billy Joel", title: "Uptown Girl", year: 1983 },
+      { artist: "Black Eyed Peas", title: "I Gotta Feeling", year: 2009 },
+      { artist: "Blondie", title: "Heart of Glass", year: 1979 },
+      { artist: "Bon Jovi", title: "Livin' On A Prayer", year: 1986 },
+      { artist: "Britney Spears", title: "...Baby One More Time", year: 1998 },
+      { artist: "Bruno Mars", title: "Uptown Funk", year: 2014 },
+      { artist: "Bryan Adams", title: "Summer Of '69", year: 1984 },
+      { artist: "Camila Cabello", title: "Havana", year: 2017 },
+      { artist: "Carly Rae Jepsen", title: "Call Me Maybe", year: 2011 },
+      { artist: "Celine Dion", title: "My Heart Will Go On", year: 1997 },
+      { artist: "The Chainsmokers", title: "Closer", year: 2016 },
+      { artist: "Cher", title: "Believe", year: 1998 },
+      { artist: "Childish Gambino", title: "Redbone", year: 2016 },
+      { artist: "Chubby Checker", title: "The Twist", year: 1960 },
+      { artist: "Coldplay", title: "Viva La Vida", year: 2008 },
+      { artist: "Daft Punk", title: "One More Time", year: 2000 },
+      { artist: "David Bowie", title: "Let's Dance", year: 1983 },
+      { artist: "David Guetta", title: "Titanium", year: 2011 },
+      { artist: "Depeche Mode", title: "Enjoy the Silence", year: 1990 },
+      { artist: "Destiny's Child", title: "Say My Name", year: 1999 },
+      { artist: "Dolly Parton", title: "Jolene", year: 1973 },
+      { artist: "Donna Summer", title: "Hot Stuff", year: 1979 },
+      { artist: "Dr. Dre", title: "Still D.R.E.", year: 1999 },
+      { artist: "Dua Lipa", title: "Levitating", year: 2020 },
+      { artist: "Eagles", title: "Hotel California", year: 1976 },
+      { artist: "Earth, Wind & Fire", title: "September", year: 1978 },
+      { artist: "Ed Sheeran", title: "Shape of You", year: 2017 },
+      { artist: "Elton John", title: "I'm Still Standing", year: 1983 },
+      { artist: "Elvis Presley", title: "Can't Help Falling in Love", year: 1961 },
+      { artist: "Eminem", title: "Lose Yourself", year: 2002 },
+      { artist: "Eurythmics", title: "Sweet Dreams (Are Made of This)", year: 1983 },
+      { artist: "Europe", title: "The Final Countdown", year: 1986 },
+      { artist: "Fleetwood Mac", title: "Dreams", year: 1977 },
+      { artist: "Flo Rida", title: "Low", year: 2007 },
+      { artist: "Foo Fighters", title: "Everlong", year: 1997 },
+      { artist: "Frank Sinatra", title: "My Way", year: 1969 },
+      { artist: "George Michael", title: "Careless Whisper", year: 1984 },
+      { artist: "Gloria Gaynor", title: "I Will Survive", year: 1978 },
+      { artist: "Guns N' Roses", title: "Sweet Child O' Mine", year: 1987 },
+      { artist: "Harry Styles", title: "As It Was", year: 2022 },
+      { artist: "Imagine Dragons", title: "Believer", year: 2017 },
+      { artist: "Irene Cara", title: "Flashdance... What a Feeling", year: 1983 },
+      { artist: "James Brown", title: "I Got You (I Feel Good)", year: 1965 },
+      { artist: "Janet Jackson", title: "Together Again", year: 1997 },
+      { artist: "Jennifer Lopez", title: "On The Floor", year: 2011 },
+      { artist: "Jet", title: "Are You Gonna Be My Girl", year: 2003 },
+      { artist: "Joan Jett & The Blackhearts", title: "I Love Rock 'N Roll", year: 1981 },
+      { artist: "John Lennon", title: "Imagine", year: 1971 },
+      { artist: "Johnny Cash", title: "Ring of Fire", year: 1963 },
+      { artist: "Journey", title: "Don't Stop Believin'", year: 1981 },
+      { artist: "Justin Bieber", title: "Sorry", year: 2015 },
+      { artist: "Justin Timberlake", title: "CAN'T STOP THE FEELING!", year: 2016 },
+      { artist: "Katy Perry", title: "Firework", year: 2010 },
+      { artist: "Ke$ha", title: "Tik Tok", year: 2009 },
+      { artist: "Kool & The Gang", title: "Celebration", year: 1980 },
+      { artist: "Lady Gaga", title: "Poker Face", year: 2008 },
+      { artist: "The La's", title: "There She Goes", year: 1990 },
+      { artist: "Lana Del Rey", title: "Summertime Sadness", year: 2012 },
+      { artist: "Led Zeppelin", title: "Stairway to Heaven", year: 1971 },
+      { artist: "Linkin Park", title: "Numb", year: 2003 },
+      { artist: "Lizzo", title: "About Damn Time", year: 2022 },
+      { artist: "Lorde", title: "Royals", year: 2013 },
+      { artist: "Los Del Rio", title: "Macarena", year: 1995 },
+      { artist: "Louis Armstrong", title: "What a Wonderful World", year: 1967 },
+      { artist: "Luis Fonsi", title: "Despacito", year: 2017 },
+      { artist: "Macklemore & Ryan Lewis", title: "Can't Hold Us", year: 2011 },
+      { artist: "Madonna", title: "Like a Prayer", year: 1989 },
+      { artist: "Mariah Carey", title: "Fantasy", year: 1995 },
+      { artist: "Mark Morrison", title: "Return of the Mack", year: 1996 },
+      { artist: "Maroon 5", title: "Sugar", year: 2014 },
+      { artist: "Marvin Gaye", title: "I Heard It Through the Grapevine", year: 1968 },
+      { artist: "Meat Loaf", title: "I'd Do Anything for Love (But I Won't Do That)", year: 1993 },
+      { artist: "Men At Work", title: "Down Under", year: 1981 },
+      { artist: "Metallica", title: "Enter Sandman", year: 1991 },
+      { artist: "MGMT", title: "Kids", year: 2007 },
+      { artist: "Michael Jackson", title: "Billie Jean", year: 1982 },
+      { artist: "Miley Cyrus", title: "Flowers", year: 2023 },
+      { artist: "Modern Talking", title: "You're My Heart, You're My Soul", year: 1984 },
+      { artist: "Mr. Mister", title: "Broken Wings", year: 1985 },
+      { artist: "Nancy Sinatra", title: "These Boots Are Made for Walkin'", year: 1966 },
+      { artist: "Natasha Bedingfield", title: "Unwritten", year: 2004 },
+      { artist: "Nelly Furtado", title: "Promiscuous", year: 2006 },
+      { artist: "New Order", title: "Blue Monday", year: 1983 },
+      { artist: "Nirvana", title: "Smells Like Teen Spirit", year: 1991 },
+      { artist: "No Doubt", title: "Don't Speak", year: 1995 },
+      { artist: "Oasis", title: "Wonderwall", year: 1995 },
+      { artist: "Olivia Rodrigo", title: "good 4 u", year: 2021 },
+      { artist: "OneRepublic", title: "Counting Stars", year: 2013 },
+      { artist: "Outkast", title: "Hey Ya!", year: 2003 },
+      { artist: "Passenger", title: "Let Her Go", year: 2012 },
+      { artist: "Pat Benatar", title: "Love Is a Battlefield", year: 1983 },
+      { artist: "Pharrell Williams", title: "Happy", year: 2013 },
+      { artist: "Phil Collins", title: "In the Air Tonight", year: 1981 },
+      { artist: "Pink", title: "Just Give Me a Reason", year: 2012 },
+      { artist: "Pink Floyd", title: "Another Brick in the Wall, Pt. 2", year: 1979 },
+      { artist: "Pitbull", title: "Give Me Everything", year: 2011 },
+      { artist: "The Police", title: "Every Breath You Take", year: 1983 },
+      { artist: "Post Malone", title: "Circles", year: 2019 },
+      { artist: "Prince", title: "Purple Rain", year: 1984 },
+      { artist: "Psy", title: "Gangnam Style", year: 2012 },
+      { artist: "Queen", title: "Bohemian Rhapsody", year: 1975 },
+      { artist: "R.E.M.", title: "Losing My Religion", year: 1991 },
+      { artist: "Rag'n'Bone Man", title: "Human", year: 2016 },
+      { artist: "Rammstein", title: "Du Hast", year: 1997 },
+      { artist: "Ray Charles", title: "Hit the Road Jack", year: 1961 },
+      { artist: "Red Hot Chili Peppers", title: "Californication", year: 1999 },
+      { artist: "Rihanna", title: "Umbrella", year: 2007 },
+      { artist: "Rick Astley", title: "Never Gonna Give You Up", year: 1987 },
+      { artist: "Ricky Martin", title: "Livin' la Vida Loca", year: 1999 },
+      { artist: "Robbie Williams", title: "Angels", year: 1997 },
+      { artist: "Robin Schulz", title: "Sugar", year: 2015 },
+      { artist: "Sam Smith", title: "Stay With Me", year: 2014 },
+      { artist: "Santana", title: "Smooth", year: 1999 },
+      { artist: "Scatman John", title: "Scatman (Ski-Ba-Bop-Ba-Dop-Bop)", year: 1994 },
+      { artist: "Sia", title: "Chandelier", year: 2014 },
+      { artist: "Simple Minds", title: "Don't You (Forget About Me)", year: 1985 },
+      { artist: "Sinéad O'Connor", title: "Nothing Compares 2 U", year: 1990 },
+      { artist: "Sister Sledge", title: "We Are Family", year: 1979 },
+      { artist: "Smash Mouth", title: "All Star", year: 1999 },
+      { artist: "Snap!", title: "Rhythm Is a Dancer", year: 1992 },
+      { artist: "Spice Girls", title: "Wannabe", year: 1996 },
+      { artist: "Stevie Wonder", title: "Superstition", year: 1972 },
+      { artist: "Stromae", title: "Alors on danse", year: 2009 },
+      { artist: "Survivor", title: "Eye of the Tiger", year: 1982 },
+      { artist: "Taio Cruz", title: "Dynamite", year: 2010 },
+      { artist: "Taylor Swift", title: "Shake It Off", year: 2014 },
+      { artist: "Tears for Fears", title: "Everybody Wants to Rule the World", year: 1985 },
+      { artist: "TLC", title: "No Scrubs", year: 1999 },
+      { artist: "Tones And I", title: "Dance Monkey", year: 2019 },
+      { artist: "Toto", title: "Africa", year: 1982 },
+      { artist: "Tracy Chapman", title: "Fast Car", year: 1988 },
+      { artist: "U2", title: "With Or Without You", year: 1987 },
+      { artist: "Usher", title: "Yeah!", year: 2004 },
+      { artist: "Van Halen", title: "Jump", year: 1984 },
+      { artist: "Vanessa Carlton", title: "A Thousand Miles", year: 2002 },
+      { artist: "Wham!", title: "Wake Me Up Before You Go-Go", year: 1984 },
+      { artist: "Whitney Houston", title: "I Wanna Dance with Somebody", year: 1987 },
+      { artist: "Wiz Khalifa", title: "See You Again", year: 2015 },
+      { artist: "The Weeknd", title: "Blinding Lights", year: 2019 },
+      { artist: "ZAYN", title: "PILLOWTALK", year: 2016 },
+      { artist: "2 Unlimited", title: "No Limit", year: 1993 },
+      { artist: "a-ha", title: "Hunting High and Low", year: 1985 },
+      { artist: "Adele", title: "Hello", year: 2015 },
+      { artist: "Anastacia", title: "I'm Outta Love", year: 2000 },
+      { artist: "Bastille", title: "Pompeii", year: 2013 },
+      { artist: "Beck", title: "Loser", year: 1993 },
+      { artist: "Beyoncé", title: "Single Ladies (Put a Ring on It)", year: 2008 },
+      { artist: "Bonnie Tyler", title: "Total Eclipse of the Heart", year: 1983 },
+      { artist: "Bruce Springsteen", title: "Dancing in the Dark", year: 1984 },
+      { artist: "Calvin Harris", title: "Summer", year: 2014 },
+      { artist: "Cardi B", title: "I Like It", year: 2018 },
+      { artist: "Charlie Puth", title: "Attention", year: 2017 },
+      { artist: "Clean Bandit", title: "Rather Be", year: 2014 },
+      { artist: "Cranberries", title: "Linger", year: 1993 },
+      { artist: "Culture Club", title: "Karma Chameleon", year: 1983 },
+      { artist: "Cyndi Lauper", title: "Girls Just Want to Have Fun", year: 1983 },
+      { artist: "Deep Blue Something", title: "Breakfast at Tiffany's", year: 1995 },
+      { artist: "Dido", title: "Thank You", year: 1998 },
+      { artist: "DNCE", title: "Cake by the Ocean", year: 2015 },
+      { artist: "Enrique Iglesias", title: "Bailando", year: 2014 },
+      { artist: "Eros Ramazzotti", title: "Cose della vita", year: 1993 },
+      { artist: "Falco", title: "Rock Me Amadeus", year: 1985 },
+      { artist: "Fugees", title: "Killing Me Softly with His Song", year: 1996 },
+      { artist: "Gala", title: "Freed from Desire", year: 1996 },
+      { artist: "Gigi D'Agostino", title: "L'Amour Toujours", year: 2000 },
+      { artist: "Gnarls Barkley", title: "Crazy", year: 2006 },
+      { artist: "Gotye", title: "Somebody That I Used to Know", year: 2011 },
+      { artist: "Green Day", title: "Basket Case", year: 1994 },
+      { artist: "Haddaway", title: "What Is Love", year: 1993 },
+      { artist: "Ini Kamoze", title: "Here Comes the Hotstepper", year: 1994 },
+      { artist: "Jamiroquai", title: "Virtual Insanity", year: 1996 },
+      { artist: "Jason Mraz", title: "I'm Yours", year: 2008 },
+      { artist: "Jennifer Rush", title: "The Power of Love", year: 1984 },
+      { artist: "Kaiser Chiefs", title: "Ruby", year: 2007 },
+      { artist: "Kungs vs Cookin' on 3 Burners", title: "This Girl", year: 2016 },
+      { artist: "Lenny Kravitz", title: "Fly Away", year: 1998 },
+      { artist: "Liquido", title: "Narcotic", year: 1998 },
+      { artist: "Lou Bega", title: "Mambo No. 5 (A Little Bit of...)", year: 1999 },
+      { artist: "Mando Diao", title: "Dance With Somebody", year: 2009 },
+      { artist: "Milky Chance", title: "Stolen Dance", year: 2013 },
+      { artist: "Münchener Freiheit", title: "Ohne Dich (schlaf' ich heut Nacht nicht ein)", year: 1985 },
+      { artist: "Nena", title: "99 Luftballons", year: 1983 },
+      { artist: "Nik Kershaw", title: "Wouldn't It Be Good", year: 1984 },
+      { artist: "No Angels", title: "Daylight in Your Eyes", year: 2001 },
+      { artist: "Ofenbach", title: "Be Mine", year: 2016 },
+      { artist: "OMI", title: "Cheerleader", year: 2014 },
+    ];
 
-    const SONGS = Array.from({ length: 200 }, (_, i) => ({
-      ...SONGS_BASE[i % SONGS_BASE.length]
-    }));
+    const SONGS = [...SONGS_BASE];
 
     function normalizeSongKeyPart(value) {
       return String(value || '')
@@ -421,6 +541,12 @@
         .trim();
     }
 
+    function songIdentityKey(song) {
+      return [song.artist, song.title, song.year]
+        .map(normalizeSongKeyPart)
+        .join('::');
+    }
+
     function buildGameDeck() {
       // Garantiert eindeutige Songs pro Spielrunde (keine Wiederholungen innerhalb eines laufenden Spiels).
       // Wichtig: Eindeutigkeit nach Song-Identität, nicht nach externer Track-ID.
@@ -428,9 +554,7 @@
       const uniqueSongs = [];
 
       SONGS.forEach((song) => {
-        const key = [song.artist, song.title, song.year]
-          .map(normalizeSongKeyPart)
-          .join('::');
+        const key = songIdentityKey(song);
         if (seen.has(key)) return;
         seen.add(key);
         uniqueSongs.push(song);
@@ -883,6 +1007,34 @@
     qs('confirmBtn').addEventListener('click', confirmPlacement);
     qs('resetBtn').addEventListener('click', hardReset);
 
+    function validateSongDeckIntegrity() {
+      const expectedBaseCount = 200;
+      console.assert(
+        SONGS_BASE.length === expectedBaseCount,
+        'SONGS_BASE must contain exactly 200 songs',
+        { actual: SONGS_BASE.length, expected: expectedBaseCount },
+      );
+
+      const baseKeys = SONGS_BASE.map(songIdentityKey);
+      const uniqueBaseKeys = new Set(baseKeys);
+      console.assert(
+        uniqueBaseKeys.size === SONGS_BASE.length,
+        'SONGS_BASE must be unique by normalized artist+title+year',
+        { total: SONGS_BASE.length, unique: uniqueBaseKeys.size },
+      );
+
+      const deck = buildGameDeck();
+      const deckKeys = deck.map(songIdentityKey);
+      const uniqueDeckKeys = new Set(deckKeys);
+      console.assert(
+        uniqueDeckKeys.size === deck.length,
+        'buildGameDeck output must not contain duplicate songs',
+        { total: deck.length, unique: uniqueDeckKeys.size },
+      );
+
+      console.info('Song/deck integrity validation checks executed.');
+    }
+
     async function validatePreviewSelectionSemantics() {
       const mk = id => ({ id, title: id, artist: id, year: 2000 });
 
@@ -931,6 +1083,8 @@
 
       console.info('Preview selection validation checks executed.');
     }
+
+    validateSongDeckIntegrity();
 
     validatePreviewSelectionSemantics().catch((err) => {
       console.error('Preview selection validation checks failed to execute', err);
