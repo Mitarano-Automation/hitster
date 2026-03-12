@@ -15,10 +15,10 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
   - Einfügepunkte klar zwischen den Timeline-Karten
   - ausgewählter Einfügepunkt ist ein **einheitliches Control** inkl. "Aktueller Song"-Status
   - große, mobile-freundliche Tap-Flächen ohne horizontales Slot-Gefummel
-- Robuster Preview-Fallback:
-  - Preview-Suche nutzt mehrere Quellen (iTunes, danach Deezer)
-  - bei fehlendem Preview wird automatisch bis zu 3x der nächste Song versucht
-  - falls weiterhin kein Preview gefunden wird, läuft der Zug deterministisch ohne Audio weiter (kein Deadlock)
+- Robuste, browser-sichere Preview-Suche:
+  - Preview-Suche nutzt iTunes Search API (CORS-kompatibel für reine Browser-Clients)
+  - mehrere Suchvarianten + Treffer-Scoring (Artist/Title + Releasejahr-Nähe)
+  - falls kein Preview gefunden wird, läuft der Zug deterministisch ohne Audio weiter (kein Deadlock)
 - Gewinner bei 10 korrekt eingeordneten Songs
 - Keine Song-Wiederholungen innerhalb eines laufenden Spiels (pro gestarteter Runde eindeutig)
 

@@ -341,11 +341,11 @@
       ["Billie Eilish","bad guy",2019,"2Fxmhks0bxGSBdJ92vM42m"],
       ["Bon Jovi","Livin' On A Prayer",1986,"37ZJ0p5Jm13JPevGcx4SkF"],
       ["Britney Spears","...Baby One More Time",1998,"3MjUtNVVq3C8Fn0MP3zhXa"],
-      ["Bonnie Tyler","Total Eclipse of the Heart",1983,"1504111288"],
+      ["Bruno Mars","Uptown Funk",2014,"32OlwWuMpZ6b0aN2RZOeMS"],
       ["Bryan Adams","Summer Of '69",1984,"6WJmI7e0x4mY8M4E2sGxkM"],
       ["Camila Cabello","Havana",2017,"1rfofaqEpACxVEHIZBJe6W"],
       ["Coldplay","Viva La Vida",2008,"1mea3bSkSGXuIRvnydlB5b"],
-      ["The Verve","Bitter Sweet Symphony",1997,"1443258189"],
+      ["Daft Punk","One More Time",2000,"0DiWol3AO6WpXZgp0goxAV"],
       ["David Guetta","Titanium",2011,"0lHAMNU8RGiIObScrsRgmP"],
       ["Depeche Mode","Enjoy the Silence",1990,"1EjQRTG53jsinzk2xlVVJP"],
       ["Dua Lipa","Levitating",2020,"39LLxExYz6ewLAcYrzQQyP"],
@@ -428,7 +428,9 @@
       const uniqueSongs = [];
 
       SONGS.forEach((song) => {
-        const key = [song.artist, song.title, song.year].map(normalizeSongKeyPart).join('::');
+        const key = [song.artist, song.title, song.year]
+          .map(normalizeSongKeyPart)
+          .join('::');
         if (seen.has(key)) return;
         seen.add(key);
         uniqueSongs.push(song);
@@ -593,60 +595,97 @@
       const title = normalizeSearchText(song.title);
       const candidateArtist = normalizeSearchText(item?.artistName || item?.artist?.name);
       const candidateTitle = normalizeSearchText(item?.trackName || item?.title);
+      const songYear = Number(song.year);
+      const releaseYear = Number(
+        String(item?.releaseDate || item?.release_date || '').slice(0, 4)
+      );
+
       let score = 0;
 
-      if (candidateTitle === title) score += 6;
+      if (candidateTitle === title) score += 7;
+      else if (candidateTitle.startsWith(title) || title.startsWith(candidateTitle)) score += 5;
       else if (candidateTitle.includes(title) || title.includes(candidateTitle)) score += 3;
 
-      if (candidateArtist === artist) score += 4;
+      if (candidateArtist === artist) score += 5;
       else if (candidateArtist.includes(artist) || artist.includes(candidateArtist)) score += 2;
+
+      if (Number.isFinite(songYear) && Number.isFinite(releaseYear)) {
+        if (releaseYear === songYear) score += 2;
+        else if (Math.abs(releaseYear - songYear) <= 1) score += 1;
+      }
 
       return score;
     }
 
-    async function fetchBestItunesPreview(song) {
-      const term = encodeURIComponent(`${song.artist} ${song.title}`);
-      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=5`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('iTunes-Suche fehlgeschlagen');
-      const data = await res.json();
-      const results = Array.isArray(data?.results) ? data.results : [];
-      const candidates = results
-        .filter((item) => item?.previewUrl)
-        .map((item) => ({ item, score: scorePreviewCandidate(song, item) }))
-        .sort((a, b) => b.score - a.score);
-      return candidates[0]?.item?.previewUrl || null;
+    function isSafePreviewUrl(url) {
+      return typeof url === 'string' && /^https:\/\//i.test(url);
     }
 
-    async function fetchBestDeezerPreview(song) {
-      const query = encodeURIComponent(`artist:"${song.artist}" track:"${song.title}"`);
-      const url = `https://api.deezer.com/search?q=${query}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Deezer-Suche fehlgeschlagen');
-      const data = await res.json();
-      const results = Array.isArray(data?.data) ? data.data : [];
-      const candidates = results
-        .filter((item) => item?.preview)
-        .map((item) => ({ item, score: scorePreviewCandidate(song, item) }))
-        .sort((a, b) => b.score - a.score);
-      return candidates[0]?.item?.preview || null;
+    async function fetchWithTimeout(url, { timeoutMs = 4000 } = {}) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
     }
 
-    async function loadPreview(song) {
-      // Mehrquellen-Fallback: zuerst iTunes, dann Deezer.
-      const previewFetchers = [fetchBestItunesPreview, fetchBestDeezerPreview];
-      let lastError = null;
+    async function findBestPreviewFromItunes(song) {
+      const terms = [
+        `${song.artist} ${song.title}`,
+        `${song.title} ${song.artist}`,
+        `${song.artist} \"${song.title}\"`,
+      ];
 
-      for (const fetcher of previewFetchers) {
+      let hadSuccessfulQuery = false;
+
+      for (const term of terms) {
+        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=12`;
         try {
-          const preview = await fetcher(song);
-          if (preview) return preview;
-        } catch (error) {
-          lastError = error;
+          const res = await fetchWithTimeout(url);
+          if (!res.ok) continue;
+
+          hadSuccessfulQuery = true;
+          const data = await res.json();
+          const results = Array.isArray(data?.results) ? data.results : [];
+          const ranked = results
+            .filter((item) => isSafePreviewUrl(item?.previewUrl))
+            .map((item) => ({ item, score: scorePreviewCandidate(song, item) }))
+            .sort((a, b) => b.score - a.score);
+
+          if (ranked[0]?.score >= 7) {
+            return { previewUrl: ranked[0].item.previewUrl, definitiveNoMatch: false };
+          }
+        } catch {
+          // isoliert pro Suchterm: Fehler einer Variante stoppt die restlichen Varianten nicht
+          continue;
         }
       }
 
-      if (lastError) throw lastError;
+      return { previewUrl: null, definitiveNoMatch: hadSuccessfulQuery };
+    }
+
+    const previewCache = new Map();
+
+    async function loadPreview(song) {
+      const cacheKey = [song.artist, song.title, song.year].map(normalizeSongKeyPart).join('::');
+      if (previewCache.has(cacheKey)) {
+        const cached = previewCache.get(cacheKey);
+        if (cached?.status === 'hit') return cached.url;
+        throw new Error('Kein Preview gefunden');
+      }
+
+      const result = await findBestPreviewFromItunes(song);
+      if (result.previewUrl) {
+        previewCache.set(cacheKey, { status: 'hit', url: result.previewUrl });
+        return result.previewUrl;
+      }
+
+      if (result.definitiveNoMatch) {
+        previewCache.set(cacheKey, { status: 'miss' });
+      }
+
       throw new Error('Kein Preview gefunden');
     }
 
