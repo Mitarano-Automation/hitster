@@ -4,7 +4,7 @@ Browserbasiertes Musik-Timeline-Spiel, inspiriert von **Hitster**.
 
 ## Features
 
-- Lokales Multiplayer-Spiel für 2–6 Spieler
+- Lokales Spiel für 1–6 Spieler (inkl. Solo-Modus)
 - Songtitel und Jahr bleiben bis zur Bestätigung verborgen
 - Audio-Preview (Play/Pause + Seek)
 - Fokus-Layout für den Zug:
